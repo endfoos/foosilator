@@ -1,0 +1,65 @@
+{{> header}}
+<h2>Score a game</h2>
+<h3>League: {{league.name}}</h3>
+<form action="games" method="post">
+  <input type="hidden" value="{{league.id}}" name="leagueId">
+  <label>
+    Winner
+    <select name="winnerId">
+      <option disabled selected value></option>
+      {{#each players}}
+        <option value="{{this.id}}">{{this.name}}</option>
+      {{/each}}
+    </select>
+  </label>
+  8 -
+  <select name="loserScore">
+    <option disabled selected value></option>
+    <option value="0">0</option>
+    <option value="1">1</option>
+    <option value="2">2</option>
+    <option value="3">3</option>
+    <option value="4">4</option>
+    <option value="5">5</option>
+    <option value="6">6</option>
+    <option value="7">7</option>
+  </select>
+  <label>
+    Loser
+    <select name="loserId">
+      <option disabled selected value></option>
+      {{#each players}}
+        <option value="{{this.id}}">{{this.name}}</option>
+      {{/each}}
+    </select>
+  </label>
+  <input type="submit" value="Score it">
+</form>
+<h2>Latest games</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Winner</th>
+      <th>Loser</th>
+      <th>Score</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each latestGames}}
+      <tr>
+        <td>{{this.winner_name}}</td>
+        <td>{{this.loser_name}}</td>
+        <td>{{this.winner_score}} - {{this.loser_score}}</td>
+        <td>
+          {{#if @first}}
+            <form method="post" action="/games/{{this.id}}/delete">
+              <input type="submit" value="Delete">
+            </form>
+          {{/if}}
+        </td>
+      </tr>
+    {{/each}}
+  </tbody>
+</table>
+{{> footer}}

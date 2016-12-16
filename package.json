@@ -1,0 +1,33 @@
+{
+  "name": "foosilator",
+  "version": "0.1.0",
+  "description": "A Middle-out Foosball Platform",
+  "main": "foosilator.js",
+  "dependencies": {
+    "body-parser": "1.15.2",
+    "envoodoo": "2.1.1",
+    "express": "4.14.0",
+    "hbs": "4.0.1",
+    "pg-promise": "5.5.0"
+  },
+  "devDependencies": {
+    "standard": "8.6.0"
+  },
+  "scripts": {
+    "start": "node app.js",
+    "test": "./node_modules/.bin/standard"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/endfoos/foosilator.git"
+  },
+  "keywords": [
+    "foosball"
+  ],
+  "author": "Lewis Christie",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/endfoos/foosilator/issues"
+  },
+  "homepage": "https://github.com/endfoos/foosilator#readme"
+}
