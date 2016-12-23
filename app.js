@@ -19,6 +19,10 @@ app.use(bodyParser.urlencoded({
 app.set('view engine', 'hbs')
 // Load partial HBS templates from /views/partials
 hbs.registerPartials(path.join(__dirname, '/views/partials'))
+const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+hbs.registerHelper('formatDate', function (d) {
+  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()} ${d.getHours()}:${d.getMinutes()}`
+})
 
 // Postgresql Promise Library
 const pgp = require('pg-promise')()
@@ -39,31 +43,69 @@ app.use(express.static('public'))
 
 // Landing page
 app.get('/', (req, res) => {
-  res.redirect('/games')
+  // Redirect to first league if one exists
+  // otherwise redirect to league management
+  db.manyOrNone('SELECT id, short_name FROM league ORDER BY created_at ASC LIMIT 1')
+  .then((leagues) => {
+    if (leagues.length <= 0) {
+      res.redirect('/leagues')
+    } else {
+      res.redirect(`${leagues[0].short_name}/games`)
+    }
+  })
+  .catch((err) => {
+    res.render('error', {
+      error: err
+    })
+    console.error(err)
+  })
 })
 
 // Games played landing page
-app.get('/games', (req, res) => {
-  Promise.all([
-    // TODO: Implement per-league landing pages
-    db.one('SELECT id, name from league WHERE id=1'),
-    db.manyOrNone('SELECT id, name FROM player'),
-    db.manyOrNone(`
-      SELECT game.id, w.name as winner_name, winner_score, l.name as loser_name, loser_score
-      FROM game
-      LEFT JOIN player w ON winner_id=w.id
-      LEFT JOIN player l ON loser_id=l.id
-      WHERE league_id = 1
-      ORDER BY game.created_at DESC
-      LIMIT 15
-    `)
-  ])
+app.get('/:league_short_name/games', (req, res) => {
+  db.one('SELECT id, name from league WHERE short_name=$1 AND is_active=true', [req.params.league_short_name])
+  .then((league) => {
+    return Promise.all([
+      league,
+      db.manyOrNone(`
+        SELECT player.id, player.name
+        FROM player
+        INNER JOIN player_to_league ptl ON player.id=ptl.player_id
+        WHERE player.is_active=true AND ptl.league_id=$1
+      `, [league.id]),
+      db.manyOrNone(`
+        SELECT game.id, w.name as winner_name, winner_score, l.name as loser_name, loser_score
+        FROM game
+        LEFT JOIN player w ON winner_id=w.id
+        LEFT JOIN player l ON loser_id=l.id
+        WHERE league_id=$1
+        ORDER BY game.created_at DESC
+        LIMIT 15
+      `, [league.id]),
+      db.manyOrNone('SELECT id, name, short_name FROM league WHERE is_active=true ORDER BY name ASC')
+    ])
+  })
   .then((data) => {
-    res.render('games', {
-      league: data[0],
-      players: data[1],
-      latestGames: data[2]
-    })
+    // Redirect to manage players if no players in this league
+    if (data[1].length <= 0) {
+      res.redirect(`/leagues/${data[0].id}`)
+    } else {
+      const activeLeagues = data[3].map((league) => {
+        return {
+          name: league.name,
+          short_name: league.short_name,
+          isCurrentLeague: league.short_name === req.params.league_short_name
+        }
+      })
+
+      res.render('games', {
+        league: data[0],
+        players: data[1],
+        latestGames: data[2],
+        currentLeague: req.params.league_short_name,
+        activeLeagues: activeLeagues
+      })
+    }
   })
   .catch((err) => {
     res.render('error', {
@@ -74,7 +116,7 @@ app.get('/games', (req, res) => {
 })
 
 // Add a new game result
-app.post('/games', (req, res) => {
+app.post('/:league_short_name/games', (req, res) => {
   const { winnerId, loserId, loserScore, leagueId } = req.body
   if (!winnerId || !loserId || !(loserScore >= 0) || !(loserScore < 8) || !leagueId || parseInt(winnerId, 10) === parseInt(loserId, 10)) {
     res.render('error', {
@@ -131,7 +173,7 @@ app.post('/games', (req, res) => {
       })
     })
     .then(() => {
-      res.redirect('/')
+      res.redirect(`/${req.params.league_short_name}/games`)
     })
     .catch((err) => {
       res.render('error', {
@@ -143,7 +185,7 @@ app.post('/games', (req, res) => {
 })
 
 // Delete the latest game result
-app.post('/games/:id/delete', (req, res) => {
+app.post(':league_short_name/games/:id/delete', (req, res) => {
   db.tx((t) => {
     // Check target game exists
     return t.one('SELECT id, league_id FROM game WHERE id=$1', [req.params.id])
@@ -179,7 +221,7 @@ app.post('/games/:id/delete', (req, res) => {
       return t.none('DELETE FROM game WHERE id=$1', [req.params.id])
     })
   }).then(() => {
-    res.redirect('/')
+    res.redirect('/league_short_name/games')
   }).catch((err) => {
     res.render('error', {
       error: err
@@ -189,49 +231,59 @@ app.post('/games/:id/delete', (req, res) => {
 })
 
 // Rankings Landing Page
-app.get('/rankings', (req, res) => {
-  Promise.all([
-    // TODO: Implement per-league landing pages
-    db.one('SELECT id, name from league WHERE id=1'),
-    db.manyOrNone(`
-      SELECT
-        player.id,
-        name,
-        color,
-        count(won.id) as games_won,
-        count(lost.id) as games_lost,
-        count(won.id) + count(lost.id) as total_games,
-        player_to_league.elo_rating as elo_rating
-      FROM player
-      LEFT JOIN game won ON player.id=won.winner_id
-      LEFT JOIN game lost ON player.id=lost.loser_id
-      INNER JOIN player_to_league ON player_to_league.player_id=player.id
-      WHERE player_to_league.league_id=1
-      GROUP BY (player.id, player_to_league.elo_rating)
-      ORDER BY elo_rating DESC
-    `),
-    db.manyOrNone(`
-      SELECT player.id AS player_id, elo_change.created_at, elo_change.elo_change
-      FROM PLAYER
-      JOIN LATERAL (
-        SELECT CASE
-          WHEN game.winner_id=player.id THEN game.winner_elo_change
-          WHEN game.loser_id=player.id THEN game.loser_elo_change
-        END as elo_change,
-        created_at
-        FROM game
-        WHERE (game.winner_id=player.id OR game.loser_id=player.id)
-          AND game.league_id=1
-          AND created_at > CURRENT_DATE - INTERVAL '14 days'
-        ORDER BY game.created_at DESC
-      ) elo_change ON true
-      ORDER BY player.id
-    `)
-  ])
+app.get('/:league_short_name/rankings', (req, res) => {
+  db.one('SELECT id, name from league WHERE short_name=$1', [req.params.league_short_name])
+  .then((league) => {
+    return Promise.all([
+      league,
+      db.manyOrNone(`
+        SELECT
+          player.id,
+          name,
+          color,
+          count(won.id) as games_won,
+          count(lost.id) as games_lost,
+          count(won.id) + count(lost.id) as total_games,
+          player_to_league.elo_rating as elo_rating
+        FROM player
+        LEFT JOIN game won ON player.id=won.winner_id
+        LEFT JOIN game lost ON player.id=lost.loser_id
+        INNER JOIN player_to_league ON player_to_league.player_id=player.id
+        WHERE player_to_league.league_id=$1
+        GROUP BY (player.id, player_to_league.elo_rating)
+        ORDER BY elo_rating DESC
+      `, [league.id]),
+      db.manyOrNone(`
+        SELECT player.id AS player_id, elo_change.created_at, elo_change.elo_change
+        FROM PLAYER
+        JOIN LATERAL (
+          SELECT CASE
+            WHEN game.winner_id=player.id THEN game.winner_elo_change
+            WHEN game.loser_id=player.id THEN game.loser_elo_change
+          END as elo_change,
+          created_at
+          FROM game
+          WHERE (game.winner_id=player.id OR game.loser_id=player.id)
+            AND game.league_id=$1
+            AND created_at > CURRENT_DATE - INTERVAL '14 days'
+          ORDER BY game.created_at DESC
+        ) elo_change ON true
+        ORDER BY player.id
+      `, [league.id]),
+      db.manyOrNone('SELECT id, name, short_name FROM league WHERE is_active=true ORDER BY name ASC')
+    ])
+  })
   .then((data) => {
     const league = data[0]
     const players = data[1]
     const lastTengames = data[2]
+    const activeLeagues = data[3].map((league) => {
+      return {
+        name: league.name,
+        short_name: league.short_name,
+        isCurrentLeague: league.short_name === req.params.league_short_name
+      }
+    })
 
     const gamesByPlayerId = {}
     lastTengames.forEach((game) => {
@@ -299,8 +351,261 @@ app.get('/rankings', (req, res) => {
     res.render('rankings', {
       league: league,
       players: players,
-      playerEloSeries: JSON.stringify(playerEloSeries)
+      playerEloSeries: JSON.stringify(playerEloSeries),
+      currentLeague: req.params.league_short_name,
+      currentPage: '/rankings',
+      activeLeagues: activeLeagues
     })
+  })
+  .catch((err) => {
+    res.render('error', {
+      error: err
+    })
+    console.error(err)
+  })
+})
+
+// View list of all players
+app.get('/players', (req, res) => {
+  Promise.all([
+    db.manyOrNone('SELECT * FROM player WHERE is_active=true ORDER BY created_at DESC'),
+    db.manyOrNone('SELECT * FROM player WHERE is_active=false ORDER BY created_at DESC'),
+    db.manyOrNone('SELECT id, name, short_name FROM league WHERE is_active=true ORDER BY name ASC')
+  ])
+  .then((data) => {
+    res.render('players', {
+      players: data[0],
+      inactivePlayers: data[1],
+      activeLeagues: data[2]
+    })
+  })
+  .catch((err) => {
+    res.render('error', {
+      error: err
+    })
+    console.error(err)
+  })
+})
+
+// Create a new player
+app.post('/players', (req, res) => {
+  const { name, color } = req.body
+  db.none('INSERT INTO player(name, color) VALUES($1, $2)', [name, color])
+  .then(() => {
+    res.redirect('/players')
+  })
+  .catch((err) => {
+    res.render('error', {
+      error: err
+    })
+    console.error(err)
+  })
+})
+
+// View an existing player
+app.get('/players/:id', (req, res) => {
+  Promise.all([
+    db.one('SELECT * FROM player WHERE id=$1', [req.params.id]),
+    db.manyOrNone('SELECT id, name, short_name FROM league WHERE is_active=true ORDER BY name ASC')
+  ])
+  .then((data) => {
+    res.render('player', {
+      player: data[0],
+      activeLeagues: data[1]
+    })
+  })
+  .catch((err) => {
+    res.render('error', {
+      error: err
+    })
+    console.error(err)
+  })
+})
+
+// Modify an existing player
+app.post('/players/:id', (req, res) => {
+  const { name, color } = req.body
+  db.none('UPDATE player SET name=$1 color=$2 WHERE id=$3', [name, color, req.params.id])
+  .then(() => {
+    res.redirect('/players')
+  })
+  .catch((err) => {
+    res.render('error', {
+      error: err
+    })
+    console.error(err)
+  })
+})
+
+// Deactivate a player
+app.post('/players/:id/deactivate', (req, res) => {
+  db.none('UPDATE player SET is_active=false WHERE id=$1', [req.params.id])
+  .then(() => {
+    res.redirect('/players')
+  })
+  .catch((err) => {
+    res.render('error', {
+      error: err
+    })
+    console.error(err)
+  })
+})
+
+// Reactivate a player
+app.post('/players/:id/reactivate', (req, res) => {
+  db.none('UPDATE player SET is_active=true WHERE id=$1', [req.params.id])
+  .then(() => {
+    res.redirect('/players')
+  })
+  .catch((err) => {
+    res.render('error', {
+      error: err
+    })
+    console.error(err)
+  })
+})
+
+// View list of all leagues
+app.get('/leagues', (req, res) => {
+  Promise.all([
+    db.manyOrNone('SELECT * FROM league WHERE is_active=true ORDER BY created_at DESC'),
+    db.manyOrNone('SELECT * FROM league WHERE is_active=false ORDER BY created_at DESC')
+  ])
+  .then((data) => {
+    res.render('leagues', {
+      leagues: data[0],
+      inactiveLeagues: data[1],
+      // Include it again for the nav menu
+      activeLeagues: data[0]
+    })
+  })
+  .catch((err) => {
+    res.render('error', {
+      error: err
+    })
+    console.error(err)
+  })
+})
+
+// Create a new league
+app.post('/leagues', (req, res) => {
+  const { name, shortName } = req.body
+  db.none('INSERT INTO league(name, short_name) VALUES($1, $2)', [name, shortName])
+  .then(() => {
+    res.redirect('/leagues')
+  })
+  .catch((err) => {
+    res.render('error', {
+      error: err
+    })
+    console.error(err)
+  })
+})
+
+// View an existing league
+app.get('/leagues/:id', (req, res) => {
+  Promise.all([
+    db.one('SELECT * FROM league WHERE id=$1', [req.params.id]),
+    db.manyOrNone(`
+      SELECT player.id, player.name, player.color, ptl.elo_rating as elo_rating
+      FROM player
+      INNER JOIN player_to_league ptl ON player.id=ptl.player_id
+      WHERE ptl.league_id=$1 AND player.is_active=true
+      ORDER BY ptl.elo_rating DESC
+    `, [req.params.id]),
+    db.manyOrNone(`
+      SELECT * FROM player WHERE player.id NOT IN (
+        SELECT player.id
+        FROM player
+        INNER JOIN player_to_league ptl ON player.id=ptl.player_id
+        WHERE ptl.league_id=$1
+      ) AND player.is_active=true
+    `, [req.params.id]),
+    db.manyOrNone('SELECT id, name, short_name FROM league WHERE is_active=true ORDER BY name ASC')
+  ])
+  .then((data) => {
+    res.render('league', {
+      league: data[0],
+      currentPlayers: data[1],
+      unaffiliatedPlayers: data[2],
+      activeLeagues: data[3]
+    })
+  })
+  .catch((err) => {
+    res.render('error', {
+      error: err
+    })
+    console.error(err)
+  })
+})
+
+// Add an existing player to this league
+app.post('/leagues/:id/players', (req, res) => {
+  // Insert with an average Elo rating for this league
+  db.none(
+    'INSERT INTO player_to_league(league_id, player_id, elo_rating) VALUES($1, $2, (SELECT COALESCE(ROUND(AVG(elo_rating)), 1000) FROM player_to_league WHERE league_id=$1))',
+    [req.params.id, req.body.playerId]
+  ).then(() => {
+    res.redirect(`/leagues/${req.params.id}`)
+  })
+  .catch((err) => {
+    res.render('error', {
+      error: err
+    })
+    console.error(err)
+  })
+})
+
+// Remove a player from this league
+app.post('/leagues/:leagueId/players/:playerId/delete', (req, res) => {
+  db.none(
+    'DELETE FROM player_to_league WHERE league_id=$1 AND player_id=$2',
+    [req.params.leagueId, req.params.playerId]
+  ).then(() => {
+    res.redirect(`/leagues/${req.params.leagueId}`)
+  })
+  .catch((err) => {
+    res.render('error', {
+      error: err
+    })
+    console.error(err)
+  })
+})
+
+// Modify an existing league
+app.post('/leagues/:id', (req, res) => {
+  const { name, shortName } = req.body
+  db.none('UPDATE league SET name=$1, short_name=$2 WHERE id=$3', [name, shortName, req.params.id])
+  .then(() => {
+    res.redirect('/leagues')
+  })
+  .catch((err) => {
+    res.render('error', {
+      error: err
+    })
+    console.error(err)
+  })
+})
+
+// Deactivate a league
+app.post('/leagues/:id/deactivate', (req, res) => {
+  db.none('UPDATE league SET is_active=false WHERE id=$1', [req.params.id])
+  .then(() => {
+    res.redirect('/leagues')
+  })
+  .catch((err) => {
+    res.render('error', {
+      error: err
+    })
+    console.error(err)
+  })
+})
+
+// Reactivate a league
+app.post('/leagues/:id/reactivate', (req, res) => {
+  db.none('UPDATE league SET is_active=true WHERE id=$1', [req.params.id])
+  .then(() => {
+    res.redirect('/leagues')
   })
   .catch((err) => {
     res.render('error', {

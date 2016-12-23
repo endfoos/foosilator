@@ -1,0 +1,67 @@
+{{> header}}
+<h2>Manage leagues</h2>
+<h3>Create New League</h3>
+<form method="post" action="/leagues">
+  <label>Name: <input type="text" name="name"></label>
+  <label>Short Name (used in urls): <input type="text" name="shortName"></label>
+  <input type="submit" value="Add League">
+</form>
+<h3>Leagues</h3>
+<table>
+  <thead>
+    <tr>
+      <th>Id</th>
+      <th>Name</th>
+      <th>Short Name</th>
+      <th>Date Created</th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each leagues}}
+      <tr>
+        <td>{{this.id}}</td>
+        <td>{{this.name}}</td>
+        <td>{{this.short_name}}</td>
+        <td>{{formatDate this.created_at}}</td>
+        <td><a href="/leagues/{{this.id}}">Update</a></td>
+        <td>
+          <form method="post" action="/leagues/{{this.id}}/deactivate">
+            <input type="submit" value="Deactivate">
+          </form>
+        </td>
+      </tr>
+    {{/each}}
+  </tbody>
+</table>
+<h3>Inactive Leagues</h3>
+<table>
+  <thead>
+    <tr>
+      <th>Id</th>
+      <th>Name</th>
+      <th>Short Name</th>
+      <th>Date Created</th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each inactiveLeagues}}
+      <tr>
+        <td>{{this.id}}</td>
+        <td>{{this.name}}</td>
+        <td>{{this.short_name}}</td>
+        <td>{{formatDate this.created_at}}</td>
+        <td><a href="/leagues/{{this.id}}">Update</a></td>
+        <td>
+          <form method="post" action="/leagues/{{this.id}}/reactivate">
+            <input type="submit" value="Reactivate">
+          </form>
+        </td>
+      </tr>
+    {{/each}}
+  </tbody>
+</table>
+{{> footer}}

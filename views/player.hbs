@@ -1,0 +1,9 @@
+{{> header}}
+<h2>Update {{player.name}}</h2>
+<a href="/players">Back</a>
+<form method="post" action="/players/{{player.id}}">
+  <label>Name: <input type="text" name="name" value="{{player.name}}"></label>
+  <label>Color: <span class="player-color" style="background-color: #{{player.color}}"></span><input type="text" name="color" value="{{player.color}}"></label>
+  <input type="submit" value="Update Player">
+</form>
+{{> footer}}

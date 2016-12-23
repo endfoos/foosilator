@@ -1,0 +1,48 @@
+{{> header}}
+<h2>Update {{league.name}}</h2>
+<a href="/leagues">Back</a>
+<form method="post" action="/leagues/{{league.id}}">
+  <label>Name: <input type="text" name="name" value="{{league.name}}"></label>
+  <label>Short Name (used in urls): <input type="text" name="shortName" value="{{league.short_name}}"></label>
+  <input type="submit" value="Update League">
+</form>
+<h2>Add a new player to {{league.name}}</h2>
+<form method="post" action="/leagues/{{league.id}}/players">
+  <label>Player name
+    <select name="playerId">
+      <option disabled selected value></option>
+      {{#each unaffiliatedPlayers}}
+        <option value="{{this.id}}">{{this.name}}</option>
+      {{/each}}
+    </select>
+  </label>
+  <input type="submit" value="Add Player">
+</form>
+<h2>Players in this league</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Id</th>
+      <th>Name</th>
+      <th>Color</th>
+      <th>Elo Rating</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each currentPlayers}}
+      <tr>
+        <td>{{this.id}}</td>
+        <td>{{this.name}}</td>
+        <td><span class="player-color" style="background-color: #{{this.color}}"></span>#{{this.color}}</td>
+        <td>{{this.elo_rating}}</td>
+        <td>
+          <form method="post" action="/leagues/{{../league.id}}/players/{{this.id}}/delete">
+            <input type="submit" value="Remove">
+          </form>
+        </td>
+      </tr>
+    {{/each}}
+  </tbody>
+</table>
+{{> footer}}

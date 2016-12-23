@@ -34,9 +34,14 @@ a:hover {
   padding: 10px 0px 10px 50px;
 }
 
+.full-width-wrapper {
+  width: 100%;
+  padding: 20px;
+}
+
 .navigation {
   width: 15%;
-  display: inline-block;
+  float: left;
 }
 
 .navigation ul {
@@ -49,8 +54,8 @@ a:hover {
 }
 
 .content {
-  display: inline-block;
-  width: 60%;
+  width: 85%;
+  float: left;
 }
 
 .content table {

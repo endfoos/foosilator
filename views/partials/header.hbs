@@ -10,13 +10,24 @@
     <div class="header">
       <h1>Endfoos Foosilator</h1>
     </div>
-    <div class="navigation">
-      <ul>
-        <li><a href="/games">Games played</a></li>
-        <li><a href="/rankings">Rankings</a></li>
-        <li><a href="/players">Manage players</a></li>
-        <li><a href="/leagues">Manage leagues</a></li>
-        <li><a href="/settings">Settings</a></li>
-      </ul>
-    </div>
-    <div class="content">
+    <div class="full-width-wrapper">
+      <div class="navigation">
+        <ul>
+          <li>
+            <label>Switch league:
+            <select onchange="window.location=this.value">
+              {{#unless currentPage}}<option disabled selected value></option>{{/unless}}
+              {{#each activeLeagues}}
+                <option value="/{{this.short_name}}{{#if ../currentPage}}{{../currentPage}}{{else}}/games{{/if}}" {{#if this.isCurrentLeague}}disabled selected{{/if}}>{{this.name}}</option>
+              {{/each}}
+            </select>
+          </li>
+          {{#if currentLeague}}
+            <li><a href="/{{currentLeague}}/games">Games played</a></li>
+            <li><a href="/{{currentLeague}}/rankings">Rankings</a></li>
+          {{/if}}
+          <li><a href="/players">Manage players</a></li>
+          <li><a href="/leagues">Manage leagues</a></li>
+        </ul>
+      </div>
+      <div class="content">
