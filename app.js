@@ -425,7 +425,7 @@ app.get('/players/:id', (req, res) => {
 // Modify an existing player
 app.post('/players/:id', (req, res) => {
   const { name, color } = req.body
-  db.none('UPDATE player SET name=$1 color=$2 WHERE id=$3', [name, color, req.params.id])
+  db.none('UPDATE player SET name=$1, color=$2 WHERE id=$3', [name, color, req.params.id])
   .then(() => {
     res.redirect('/players')
   })
