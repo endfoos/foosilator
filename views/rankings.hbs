@@ -1,4 +1,91 @@
 {{> header}}
+<input type="hidden" id="elo-graph-data" data-graphData="{{playerEloSeries}}">
+<svg id="svg-two-week-graph" width="100%" height="400"><g></g></svg>
+<script src="/scripts/d3.4.4.0.min.js"></script>
+<script type="text/javascript">
+  var margin = {
+    top: 20,
+    right: 80,
+    bottom: 30,
+    left: 50
+  };
+
+  var svgContainer = d3.select('svg');
+  var svgEl = d3.select('g')
+    .append('g')
+      .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');;
+
+  var width = svgContainer.node().getBoundingClientRect().width - margin.left - margin.right;
+
+  var height = 400 - margin.top - margin.bottom;
+
+  var graphDataElement = document.getElementById('elo-graph-data');
+  var graphData = JSON.parse(graphDataElement.getAttribute('data-graphData'));
+  Object.keys(graphData).forEach(function (playerId) {
+    const playerData = graphData[playerId];
+    playerData.forEach(function (d) {
+      d.date = new Date(d.date)
+    });
+  });
+
+  var x = d3.scaleTime().range([0, width]);
+  var y = d3.scaleLinear().range([height, 0]);
+  var z = d3.scaleOrdinal(d3.schemeCategory10);
+
+  var line = d3.line()
+    .x(function (d) {
+      return x(d.date)
+    })
+    .y(function (d) {
+      return y(d.elo_rating)
+    });
+
+  const dataMerged = d3.merge(d3.values(graphData));
+
+  x.domain(d3.extent(dataMerged, function (d) {
+    return d.date;
+  }));
+
+  y.domain(d3.extent(dataMerged, function (d) {
+      return d.elo_rating;
+  })).nice();
+
+  Object.keys(graphData).forEach(function (playerId) {
+    const playerData = graphData[playerId];
+
+    svgEl.append('path')
+      .attr('class', 'line')
+      .style('stroke', function () {
+        return z(playerId)
+      })
+      .attr('d', line(playerData));
+
+    var lastDatum = playerData[playerData.length - 1];
+
+    svgEl.append("text")
+      .attr("transform", "translate(" + x(lastDatum.date) + "," + y(lastDatum.elo_rating) + ")")
+      .attr("x", 3)
+      .attr("dy", "0.35em")
+      .style("font", "10px sans-serif")
+      .text(lastDatum.player_name);
+  });
+
+  svgEl.append("g")
+    .attr("class", "axis")
+    .attr("transform", "translate(0," + height + ")")
+    .call(d3.axisBottom(x));
+
+  svgEl.append("g")
+    .attr("class", "axis")
+    .call(d3.axisLeft(y))
+    .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", "0.71em")
+      .text("Elo Rating");
+
+
+</script>
 <h2>Rankings</h2>
 <table>
   <thead>

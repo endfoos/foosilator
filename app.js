@@ -208,12 +208,93 @@ app.get('/rankings', (req, res) => {
       WHERE player_to_league.league_id=1
       GROUP BY (player.id, player_to_league.elo_rating)
       ORDER BY elo_rating DESC
+    `),
+    db.manyOrNone(`
+      SELECT player.id AS player_id, elo_change.created_at, elo_change.elo_change
+      FROM PLAYER
+      JOIN LATERAL (
+        SELECT CASE
+          WHEN game.winner_id=player.id THEN game.winner_elo_change
+          WHEN game.loser_id=player.id THEN game.loser_elo_change
+        END as elo_change,
+        created_at
+        FROM game
+        WHERE (game.winner_id=player.id OR game.loser_id=player.id)
+          AND game.league_id=1
+          AND created_at > CURRENT_DATE - INTERVAL '14 days'
+        ORDER BY game.created_at DESC
+      ) elo_change ON true
+      ORDER BY player.id
     `)
   ])
   .then((data) => {
+    const league = data[0]
+    const players = data[1]
+    const lastTengames = data[2]
+
+    const gamesByPlayerId = {}
+    lastTengames.forEach((game) => {
+      gamesByPlayerId[game.player_id] = gamesByPlayerId[game.player_id] || []
+      gamesByPlayerId[game.player_id].push({
+        created_at: game.created_at,
+        elo_change: game.elo_change
+      })
+    })
+
+    const startDate = new Date()
+    const endDate = new Date(startDate.getTime())
+    endDate.setDate(endDate.getDate() - 14)
+
+    // Map of player_id -> [{player_name, elo_rating, date}]
+    const playerEloSeries = {}
+    players.forEach((player) => {
+      // Initialize array
+      // Current elo ranking is from last game to current time
+      playerEloSeries[player.id] = [
+        {
+          player_name: player.name,
+          elo_rating: player.elo_rating,
+          date: startDate
+        }
+      ]
+      // If they have a last game then use this for next interval at current rank
+      const lastGames = gamesByPlayerId[player.id]
+      if (lastGames) {
+        playerEloSeries[player.id].push(
+          {
+            player_name: player.name,
+            elo_rating: player.elo_rating,
+            date: gamesByPlayerId[player.id][0].created_at
+          }
+        )
+        // Iterate over last games
+        for (var i = 0; i < lastGames.length; i++) {
+          playerEloSeries[player.id].push(
+            {
+              player_name: player.name,
+              elo_rating: playerEloSeries[player.id][playerEloSeries[player.id].length - 1].elo_rating - lastGames[i].elo_change,
+              date: lastGames[i + 1] ? lastGames[i + 1].created_at : endDate
+            }
+          )
+        }
+      } else {
+        // Append an end value
+        playerEloSeries[player.id].push(
+          {
+            player_name: player.name,
+            elo_rating: playerEloSeries[player.id][playerEloSeries[player.id].length - 1].elo_rating,
+            date: endDate
+          }
+        )
+      }
+      // Reverse so time goes forward
+      playerEloSeries[player.id].reverse()
+    })
+
     res.render('rankings', {
-      league: data[0],
-      players: data[1]
+      league: league,
+      players: players,
+      playerEloSeries: JSON.stringify(playerEloSeries)
     })
   })
   .catch((err) => {
