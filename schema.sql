@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS player(
   id serial NOT NULL,
   name text NOT NULL,
+  color varchar(6) NOT NULL,
   created_at timestamp with time zone DEFAULT now() NOT NULL,
   PRIMARY KEY(id)
  );

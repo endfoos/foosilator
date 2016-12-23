@@ -30,7 +30,6 @@
 
   var x = d3.scaleTime().range([0, width]);
   var y = d3.scaleLinear().range([height, 0]);
-  var z = d3.scaleOrdinal(d3.schemeCategory10);
 
   var line = d3.line()
     .x(function (d) {
@@ -55,9 +54,7 @@
 
     svgEl.append('path')
       .attr('class', 'line')
-      .style('stroke', function () {
-        return z(playerId)
-      })
+      .style('stroke', playerData[playerData.length -1].color)
       .attr('d', line(playerData));
 
     var lastDatum = playerData[playerData.length - 1];
@@ -100,7 +97,7 @@
   <tbody>
     {{#each players}}
       <tr>
-        <td>{{this.name}}</td>
+        <td><span class="player-color" style="background-color: #{{this.color}}"></span>{{this.name}}</td>
         <td>{{this.games_won}}</td>
         <td>{{this.games_lost}}</td>
         <td>{{this.total_games}}</td>

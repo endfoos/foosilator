@@ -197,6 +197,7 @@ app.get('/rankings', (req, res) => {
       SELECT
         player.id,
         name,
+        color,
         count(won.id) as games_won,
         count(lost.id) as games_lost,
         count(won.id) + count(lost.id) as total_games,
@@ -253,6 +254,7 @@ app.get('/rankings', (req, res) => {
       playerEloSeries[player.id] = [
         {
           player_name: player.name,
+          color: player.color,
           elo_rating: player.elo_rating,
           date: startDate
         }
@@ -263,6 +265,7 @@ app.get('/rankings', (req, res) => {
         playerEloSeries[player.id].push(
           {
             player_name: player.name,
+            color: player.color,
             elo_rating: player.elo_rating,
             date: gamesByPlayerId[player.id][0].created_at
           }
@@ -272,6 +275,7 @@ app.get('/rankings', (req, res) => {
           playerEloSeries[player.id].push(
             {
               player_name: player.name,
+              color: player.color,
               elo_rating: playerEloSeries[player.id][playerEloSeries[player.id].length - 1].elo_rating - lastGames[i].elo_change,
               date: lastGames[i + 1] ? lastGames[i + 1].created_at : endDate
             }
@@ -282,6 +286,7 @@ app.get('/rankings', (req, res) => {
         playerEloSeries[player.id].push(
           {
             player_name: player.name,
+            color: player.color,
             elo_rating: playerEloSeries[player.id][playerEloSeries[player.id].length - 1].elo_rating,
             date: endDate
           }

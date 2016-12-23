@@ -78,3 +78,11 @@ path {
 svg text {
   fill: grey;
 }
+
+.player-color {
+  width: 15px;
+  height: 15px;
+  margin-right: 10px;
+  display: inline-block;
+  border-radius: 100%;
+}
