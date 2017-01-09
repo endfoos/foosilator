@@ -1,5 +1,6 @@
 # Env file
 .env
+.env-database
 
 # Logs
 logs

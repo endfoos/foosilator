@@ -1,0 +1,14 @@
+version: '2'
+services:
+  app:
+    build: .
+    ports:
+      - 8080:8080
+    env_file: .env
+    depends_on:
+      - database
+  database:
+    image: postgres:9.5
+    env_file: .env-database
+    ports:
+      - 6543:5432
