@@ -185,7 +185,7 @@ app.post('/:league_short_name/games', (req, res) => {
 })
 
 // Delete the latest game result
-app.post(':league_short_name/games/:id/delete', (req, res) => {
+app.post('/:league_short_name/games/:id/delete', (req, res) => {
   db.tx((t) => {
     // Check target game exists
     return t.one('SELECT id, league_id FROM game WHERE id=$1', [req.params.id])
@@ -207,12 +207,18 @@ app.post(':league_short_name/games/:id/delete', (req, res) => {
       // Update player Elo Ratings to revert score changes
       return Promise.all([
         db.none(
-          'UPDATE player_to_league SET elo_rating=(elo_rating - $1) WHERE player_to_league.id=$2',
-          [gameForDeletion.winner_elo_change, gameForDeletion.winner_id]
+          `UPDATE player_to_league SET elo_rating=(elo_rating - $1)
+          WHERE player_to_league.player_id=$2
+            AND player_to_league.league_id=$3
+          `,
+          [gameForDeletion.winner_elo_change, gameForDeletion.winner_id, gameForDeletion.league_id]
         ),
         db.none(
-          'UPDATE player_to_league SET elo_rating=(elo_rating - $1) WHERE player_to_league.id=$2',
-          [gameForDeletion.loser_elo_change, gameForDeletion.loser_id]
+          `UPDATE player_to_league SET elo_rating=(elo_rating - $1)
+          WHERE player_to_league.player_id=$2
+            AND player_to_league.league_id=$3
+          `,
+          [gameForDeletion.loser_elo_change, gameForDeletion.loser_id, gameForDeletion.league_id]
         )
       ])
     })
@@ -221,7 +227,7 @@ app.post(':league_short_name/games/:id/delete', (req, res) => {
       return t.none('DELETE FROM game WHERE id=$1', [req.params.id])
     })
   }).then(() => {
-    res.redirect('/league_short_name/games')
+    res.redirect(`/${req.params.league_short_name}/games`)
   }).catch((err) => {
     res.render('error', {
       error: err

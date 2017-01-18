@@ -53,7 +53,7 @@
         <td>{{this.winner_score}} - {{this.loser_score}}</td>
         <td>
           {{#if @first}}
-            <form method="post" action="/games/{{this.id}}/delete">
+            <form method="post" action="/{{../currentLeague}}/games/{{this.id}}/delete">
               <input type="submit" value="Delete">
             </form>
           {{/if}}
