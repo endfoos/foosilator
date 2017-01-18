@@ -241,13 +241,11 @@ app.get('/:league_short_name/rankings', (req, res) => {
           player.id,
           name,
           color,
-          count(won.id) as games_won,
-          count(lost.id) as games_lost,
-          count(won.id) + count(lost.id) as total_games,
+          (SELECT count(id) FROM game WHERE winner_id=player.id) as games_won,
+          (SELECT count(id) FROM game WHERE loser_id=player.id) as games_lost,
+          (SELECT count(id) FROM game WHERE winner_id = player.id OR loser_id=player.id) as total_games,
           player_to_league.elo_rating as elo_rating
         FROM player
-        LEFT JOIN game won ON player.id=won.winner_id
-        LEFT JOIN game lost ON player.id=lost.loser_id
         INNER JOIN player_to_league ON player_to_league.player_id=player.id
         WHERE player_to_league.league_id=$1
         GROUP BY (player.id, player_to_league.elo_rating)
