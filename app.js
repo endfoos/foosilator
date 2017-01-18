@@ -352,8 +352,8 @@ app.get('/:league_short_name/rankings', (req, res) => {
       playerEloSeries[player.id].reverse()
     })
 
-    const gaugeData = [];
-    for(var i = 0; i < players.length && i < 4; i++) {
+    const gaugeData = []
+    for (var i = 0; i < players.length && i < 4; i++) {
       gaugeData[i] = {
         name: players[i].name,
         color: players[i].color,
