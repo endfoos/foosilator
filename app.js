@@ -346,13 +346,24 @@ app.get('/:league_short_name/rankings', (req, res) => {
       playerEloSeries[player.id].reverse()
     })
 
+    const gaugeData = [];
+    for(var i = 0; i < players.length && i < 4; i++) {
+      gaugeData[i] = {
+        name: players[i].name,
+        color: players[i].color,
+        title: 'Games Won',
+        value: players[i].games_won / players[i].total_games
+      }
+    }
+
     res.render('rankings', {
       league: league,
       players: players,
       playerEloSeries: JSON.stringify(playerEloSeries),
       currentLeague: req.params.league_short_name,
       currentPage: '/rankings',
-      activeLeagues: activeLeagues
+      activeLeagues: activeLeagues,
+      gaugeData: JSON.stringify(gaugeData)
     })
   })
   .catch((err) => {
