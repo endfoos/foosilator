@@ -14,7 +14,7 @@ body {
 }
 
 h1 {
-  text-transform: capitalize;
+  text-transform: uppercase;
 }
 
 a {
@@ -68,10 +68,98 @@ a:hover {
 
 .content table {
   width: 100%;
+  border-collapse: collapse;
 }
 
 .content table th {
   text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #8f8f8f;
+}
+
+.content tr {
+  border-bottom: 1px solid #252626;
+}
+
+.content tbody tr:hover {
+  background-color: #282828;
+}
+
+.content th, .content td {
+  padding: 10px 0px;
+}
+
+section {
+  margin-bottom: 20px;
+}
+
+hr {
+  margin: 0px;
+  border: none;
+  background-color: transparent;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #252626;
+}
+
+.field-wrap {
+  display: inline-block;
+  margin-right: 8px;
+  margin-bottom: 8px;
+  height: 0px;
+}
+
+.field-wrap label {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #8f8f8f;
+}
+
+input[type="text"] {
+  border: none;
+  border-radius: 2px;
+  background-color: #ffffff;
+  font-size: 14px;
+  padding: 4px 10px;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+select {
+  background-color: #ffffff;
+  background-image: url('/images/dropdown-arrow.png');
+  background-repeat: no-repeat;
+  background-position: right 6px top 60%;
+  background-size: 8px;
+  border: none;
+  border-radius: 2px;
+  padding: 4px 20px 4px 10px;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  font-size: 14px;
+}
+
+input[type="submit"] {
+  -moz-appearance: none;
+  -webkit-appearance: none;
+  appearance: none;
+  border: none;
+  background-color: #1DB954;
+  color: white;
+  border-radius: 10px;
+  padding: 6px 15px;
+  margin: 2px;
+  transition: all 0.05s;
+}
+
+input[type="submit"]:hover {
+  background-color: #1BD85E;
+  padding: 8px 17px;
+  border-radius: 12px;
+  margin: 0px;
 }
 
 path {

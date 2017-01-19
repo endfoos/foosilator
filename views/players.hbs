@@ -1,67 +1,83 @@
 {{> header}}
 <h2>Manage players</h2>
 <h3>Create New Player</h3>
-<form method="post" action="/players">
-  <label>Name: <input type="text" name="name"></label>
-  <label>Color: <input type="text" name="color"></label>
-  <input type="submit" value="Add Player">
-</form>
+<section>
+  <form method="post" action="/players">
+    <div class="field-wrap">
+      <label for="nameField">Name</label>
+      <input type="text" name="name" id="nameField">
+    </div>
+    <div class="field-wrap">
+      <label for="colorField">Color</label>
+      <input type="text" name="color" id="colorField">
+    </div>
+    <div class="field-wrap">
+      <input type="submit" value="Add Player">
+    </div>
+  </form>
+</section>
+<hr>
 <h3>Players</h3>
-<table>
-  <thead>
-    <tr>
-      <th>Id</th>
-      <th>Name</th>
-      <th>Color</th>
-      <th>Date Created</th>
-      <th></th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    {{#each players}}
+  <section>
+  <table>
+    <thead>
       <tr>
-        <td>{{this.id}}</td>
-        <td>{{this.name}}</td>
-        <td><span class="player-color" style="background-color: #{{this.color}}"></span>#{{this.color}}</td>
-        <td>{{formatDate this.created_at}}</td>
-        <td><a href="/players/{{this.id}}">Update</a></td>
-        <td>
-          <form method="post" action="/players/{{this.id}}/deactivate">
-            <input type="submit" value="Deactivate">
-          </form>
-        </td>
+        <th>Id</th>
+        <th>Name</th>
+        <th>Color</th>
+        <th>Date Created</th>
+        <th></th>
+        <th></th>
       </tr>
-    {{/each}}
-  </tbody>
-</table>
+    </thead>
+    <tbody>
+      {{#each players}}
+        <tr>
+          <td>{{this.id}}</td>
+          <td>{{this.name}}</td>
+          <td><span class="player-color" style="background-color: #{{this.color}}"></span>#{{this.color}}</td>
+          <td>{{formatDate this.created_at}}</td>
+          <td><a href="/players/{{this.id}}">Update</a></td>
+          <td>
+            <form method="post" action="/players/{{this.id}}/deactivate">
+              <input type="submit" value="Deactivate">
+            </form>
+          </td>
+        </tr>
+      {{/each}}
+    </tbody>
+  </table>
+</section>
+<hr>
 <h3>Inactive Players</h3>
-<table>
-  <thead>
-    <tr>
-      <th>Id</th>
-      <th>Name</th>
-      <th>Color</th>
-      <th>Date Created</th>
-      <th></th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    {{#each inactivePlayers}}
+<section>
+  <table>
+    <thead>
       <tr>
-        <td>{{this.id}}</td>
-        <td>{{this.name}}</td>
-        <td><span class="player-color" style="background-color: #{{this.color}}"></span>#{{this.color}}</td>
-        <td>{{formatDate this.created_at}}</td>
-        <td><a href="/players/{{this.id}}">Update</a></td>
-        <td>
-          <form method="post" action="/players/{{this.id}}/reactivate">
-            <input type="submit" value="Reactivate">
-          </form>
-        </td>
+        <th>Id</th>
+        <th>Name</th>
+        <th>Color</th>
+        <th>Date Created</th>
+        <th></th>
+        <th></th>
       </tr>
-    {{/each}}
-  </tbody>
-</table>
+    </thead>
+    <tbody>
+      {{#each inactivePlayers}}
+        <tr>
+          <td>{{this.id}}</td>
+          <td>{{this.name}}</td>
+          <td><span class="player-color" style="background-color: #{{this.color}}"></span>#{{this.color}}</td>
+          <td>{{formatDate this.created_at}}</td>
+          <td><a href="/players/{{this.id}}">Update</a></td>
+          <td>
+            <form method="post" action="/players/{{this.id}}/reactivate">
+              <input type="submit" value="Reactivate">
+            </form>
+          </td>
+        </tr>
+      {{/each}}
+    </tbody>
+  </table>
+</section>
 {{> footer}}

@@ -1,67 +1,83 @@
 {{> header}}
 <h2>Manage leagues</h2>
 <h3>Create New League</h3>
-<form method="post" action="/leagues">
-  <label>Name: <input type="text" name="name"></label>
-  <label>Short Name (used in urls): <input type="text" name="shortName"></label>
-  <input type="submit" value="Add League">
-</form>
+<section>
+  <form method="post" action="/leagues">
+    <div class="field-wrap">
+      <label for="nameField">Name</label>
+      <input type="text" name="name" id="nameField">
+    </div>
+    <div class="field-wrap">
+      <label for="shortNameField">Short Name (used in urls)</label>
+      <input type="text" name="shortName" id="shortNameField">
+    </div>
+    <div class="field-wrap">
+      <input type="submit" value="Add League">
+    </div>
+  </form>
+</section>
+<hr>
 <h3>Leagues</h3>
-<table>
-  <thead>
-    <tr>
-      <th>Id</th>
-      <th>Name</th>
-      <th>Short Name</th>
-      <th>Date Created</th>
-      <th></th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    {{#each leagues}}
+<section>
+  <table>
+    <thead>
       <tr>
-        <td>{{this.id}}</td>
-        <td>{{this.name}}</td>
-        <td>{{this.short_name}}</td>
-        <td>{{formatDate this.created_at}}</td>
-        <td><a href="/leagues/{{this.id}}">Update</a></td>
-        <td>
-          <form method="post" action="/leagues/{{this.id}}/deactivate">
-            <input type="submit" value="Deactivate">
-          </form>
-        </td>
+        <th>Id</th>
+        <th>Name</th>
+        <th>Short Name</th>
+        <th>Date Created</th>
+        <th></th>
+        <th></th>
       </tr>
-    {{/each}}
-  </tbody>
-</table>
+    </thead>
+    <tbody>
+      {{#each leagues}}
+        <tr>
+          <td>{{this.id}}</td>
+          <td>{{this.name}}</td>
+          <td>{{this.short_name}}</td>
+          <td>{{formatDate this.created_at}}</td>
+          <td><a href="/leagues/{{this.id}}">Update</a></td>
+          <td>
+            <form method="post" action="/leagues/{{this.id}}/deactivate">
+              <input type="submit" value="Deactivate">
+            </form>
+          </td>
+        </tr>
+      {{/each}}
+    </tbody>
+  </table>
+</section>
+<hr>
 <h3>Inactive Leagues</h3>
-<table>
-  <thead>
-    <tr>
-      <th>Id</th>
-      <th>Name</th>
-      <th>Short Name</th>
-      <th>Date Created</th>
-      <th></th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    {{#each inactiveLeagues}}
+<section>
+  <table>
+    <thead>
       <tr>
-        <td>{{this.id}}</td>
-        <td>{{this.name}}</td>
-        <td>{{this.short_name}}</td>
-        <td>{{formatDate this.created_at}}</td>
-        <td><a href="/leagues/{{this.id}}">Update</a></td>
-        <td>
-          <form method="post" action="/leagues/{{this.id}}/reactivate">
-            <input type="submit" value="Reactivate">
-          </form>
-        </td>
+        <th>Id</th>
+        <th>Name</th>
+        <th>Short Name</th>
+        <th>Date Created</th>
+        <th></th>
+        <th></th>
       </tr>
-    {{/each}}
-  </tbody>
-</table>
+    </thead>
+    <tbody>
+      {{#each inactiveLeagues}}
+        <tr>
+          <td>{{this.id}}</td>
+          <td>{{this.name}}</td>
+          <td>{{this.short_name}}</td>
+          <td>{{formatDate this.created_at}}</td>
+          <td><a href="/leagues/{{this.id}}">Update</a></td>
+          <td>
+            <form method="post" action="/leagues/{{this.id}}/reactivate">
+              <input type="submit" value="Reactivate">
+            </form>
+          </td>
+        </tr>
+      {{/each}}
+    </tbody>
+  </table>
+</section>
 {{> footer}}

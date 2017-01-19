@@ -1,24 +1,30 @@
 {{> header}}
 <h2>Update {{league.name}}</h2>
 <a href="/leagues">Back</a>
-<form method="post" action="/leagues/{{league.id}}">
-  <label>Name: <input type="text" name="name" value="{{league.name}}"></label>
-  <label>Short Name (used in urls): <input type="text" name="shortName" value="{{league.short_name}}"></label>
-  <input type="submit" value="Update League">
-</form>
+<section>
+  <form method="post" action="/leagues/{{league.id}}">
+    <label>Name: <input type="text" name="name" value="{{league.name}}"></label>
+    <label>Short Name (used in urls): <input type="text" name="shortName" value="{{league.short_name}}"></label>
+    <input type="submit" value="Update League">
+  </form>
+</section>
+<hr>
 <h2>Add a new player to {{league.name}}</h2>
-<form method="post" action="/leagues/{{league.id}}/players">
-  <label>Player name
-    <select name="playerId">
-      <option disabled selected value></option>
-      {{#each unaffiliatedPlayers}}
-        <option value="{{this.id}}">{{this.name}}</option>
-      {{/each}}
-    </select>
-  </label>
-  <input type="submit" value="Add Player">
-</form>
-<h2>Players in this league</h2>
+<section>
+  <form method="post" action="/leagues/{{league.id}}/players">
+    <label>Player name
+      <select name="playerId">
+        <option disabled selected value></option>
+        {{#each unaffiliatedPlayers}}
+          <option value="{{this.id}}">{{this.name}}</option>
+        {{/each}}
+      </select>
+    </label>
+    <input type="submit" value="Add Player">
+  </form>
+</section>
+<hr>
+<h2>Players</h2>
 <table>
   <thead>
     <tr>
