@@ -38,6 +38,10 @@ a:hover {
   padding: 10px 0px 10px 50px;
 }
 
+header a:hover {
+  color: #ffffff;
+}
+
 .full-width-wrapper {
   width: 100%;
 }
