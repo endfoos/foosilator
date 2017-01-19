@@ -2,8 +2,17 @@
 <h2>Update {{player.name}}</h2>
 <a href="/players">Back</a>
 <form method="post" action="/players/{{player.id}}">
-  <label>Name: <input type="text" name="name" value="{{player.name}}"></label>
-  <label>Color: <span class="player-color" style="background-color: #{{player.color}}"></span><input type="text" name="color" value="{{player.color}}"></label>
-  <input type="submit" value="Update Player">
+  <div class="field-wrap">
+    <label for="nameField">Name</label>
+    <input type="text" name="name" id="nameField" value="{{player.name}}">
+  </div>
+  <div class="field-wrap">
+    <label for="colorField">Color</label>
+    <input type="text" name="color" id="colorField" value="{{player.color}}">
+    <span class="player-color" style="background-color: #{{player.color}}"></span>
+  </div>
+  <div class="field-wrap">
+    <input type="submit" value="Update Player">
+  </div>
 </form>
 {{> footer}}
