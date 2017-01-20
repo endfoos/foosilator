@@ -1,0 +1,12 @@
+$lightBlack: #181818;
+$midBlack: #121212;
+$black: #000;
+$white: #fff;
+$primaryColour: #2ab759;
+$primaryColourLight: lighten($primaryColour, 5%);
+
+html,
+body {
+  background: $midBlack;
+  color: $white;
+}

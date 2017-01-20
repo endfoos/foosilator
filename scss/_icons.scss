@@ -1,0 +1,29 @@
+@font-face {
+  font-family: 'foosilator';
+  src: url('/fonts/foosilator.eot?19800854');
+  src: url('/fonts/foosilator.eot?19800854#iefix') format('embedded-opentype'),
+       url('/fonts/foosilator.woff2?19800854') format('woff2'),
+       url('/fonts/foosilator.woff?19800854') format('woff'),
+       url('/fonts/foosilator.ttf?19800854') format('truetype'),
+       url('/fonts/foosilator.svg?19800854#foosilator') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+
+[class^="icon-"]:before, [class*=" icon-"]:before {
+  font-family: "foosilator";
+  font-style: normal;
+  font-weight: normal;
+  speak: none;
+  display: inline-block;
+  text-decoration: inherit;
+  width: 1em;
+  margin-right: .2em;
+  text-align: center;
+  font-variant: normal;
+  text-transform: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-menu:before { content: '\f0c9'; }
