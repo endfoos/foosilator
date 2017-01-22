@@ -5,8 +5,6 @@
 [class*='max-'] {
   padding-left: 20px;
   padding-right: 20px;
-  margin-left: auto;
-  margin-right: auto;
 }
 
 [class*='max-']:after,
@@ -18,6 +16,15 @@
 
 .max-1180 {
   max-width: 1180px;
+}
+
+@media (min-width: 1024px) {
+
+  [class*='max-'] {
+    padding-left: 30px;
+    padding-right: 30px;
+  }
+
 }
 
 
@@ -250,26 +257,14 @@
   }
 }
 
-@media screen and (max-width: 767px) {
+@media screen and (max-width: 599px) {
   .hide-mob {
     display: none;
   }
 }
 
-@media screen and (min-width: 768px) {
+@media screen and (min-width: 600px) {
   .hide-tablet-up {
-    display: none;
-  }
-}
-
-@media screen and (max-width: 1023px) {
-  .hide-desktop-down {
-    display: none;
-  }
-}
-
-@media screen and (min-width: 1024px) {
-  .hide-desktop {
     display: none;
   }
 }

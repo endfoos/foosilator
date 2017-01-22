@@ -2,11 +2,12 @@ $lightBlack: #181818;
 $midBlack: #121212;
 $black: #000;
 $white: #fff;
+$grey: #919191;
 $primaryColour: #2ab759;
 $primaryColourLight: lighten($primaryColour, 5%);
 
 html,
 body {
-  background: $midBlack;
+  background: $lightBlack;
   color: $white;
 }
