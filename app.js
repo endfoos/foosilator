@@ -273,7 +273,7 @@ app.post('/:league_short_name/games', (req, res) => {
   } else {
     db.tx((t) => {
       return Promise.all([
-        db.one(`
+        t.one(`
           SELECT player.id, player_to_league.id as player_to_league_id, player_to_league.elo_rating as elo_rating
           FROM player
           INNER JOIN player_to_league ON player.id=player_to_league.player_id
@@ -283,7 +283,7 @@ app.post('/:league_short_name/games', (req, res) => {
           player.id=$2`,
           [leagueId, winnerId]
         ),
-        db.one(`
+        t.one(`
           SELECT player.id, player_to_league.id as player_to_league_id, player_to_league.elo_rating as elo_rating
           FROM player
           INNER JOIN player_to_league ON player.id=player_to_league.player_id
@@ -304,16 +304,16 @@ app.post('/:league_short_name/games', (req, res) => {
 
         return Promise.all([
           // Update Elo score for this league
-          db.none(
+          t.none(
             'UPDATE player_to_league SET elo_rating=$1 WHERE player_to_league.id=$2',
             [winnerNewRating, winner.player_to_league_id]
           ),
-          db.none(
+          t.none(
             'UPDATE player_to_league SET elo_rating=$1 WHERE player_to_league.id=$2',
             [loserNewRating, loser.player_to_league_id]
           ),
           // Store game result and elo change
-          db.none(
+          t.none(
             'INSERT INTO game(winner_id, winner_score, winner_elo_change, loser_id, loser_score, loser_elo_change, league_id) values($1, $2, $3, $4, $5, $6, $7)',
             [winnerId, 8, (winnerNewRating - winner.elo_rating), loserId, loserScore, (loserNewRating - loser.elo_rating), leagueId]
           )
@@ -354,14 +354,14 @@ app.post('/:league_short_name/games/:id/delete', (req, res) => {
     .then((gameForDeletion) => {
       // Update player Elo Ratings to revert score changes
       return Promise.all([
-        db.none(
+        t.none(
           `UPDATE player_to_league SET elo_rating=(elo_rating - $1)
           WHERE player_to_league.player_id=$2
             AND player_to_league.league_id=$3
           `,
           [gameForDeletion.winner_elo_change, gameForDeletion.winner_id, gameForDeletion.league_id]
         ),
-        db.none(
+        t.none(
           `UPDATE player_to_league SET elo_rating=(elo_rating - $1)
           WHERE player_to_league.player_id=$2
             AND player_to_league.league_id=$3
