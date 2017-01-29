@@ -5,6 +5,105 @@ const path = require('path')
 
 // Load .env
 require('envoodoo')()
+const NODE_ENV = process.env.NODE_ENV || 'production'
+
+// Postgresql Promise Library
+const pgp = require('pg-promise')()
+const db = pgp({
+  host: process.env.PGHOST,
+  port: process.env.PGPORT,
+  database: process.env.PGDATABASE,
+  user: process.env.PGUSER,
+  password: process.env.PGPASSWORD
+})
+
+// Migrations
+// Outer transaction t1 for entire migration sequence
+db.tx((t1) => {
+  // Create tracking table if it does not exist
+  return t1.none(`
+    CREATE TABLE IF NOT EXISTS migration(
+      id bigint NOT NULL,
+      name text NOT NULL,
+      created_at timestamp with time zone DEFAULT now() NOT NULL,
+      PRIMARY KEY(id)
+    )
+  `)
+  .then(() => {
+    // Read migrations directory
+    const path = require('path')
+    const fs = require('fs')
+    return new Promise((resolve, reject) => {
+      fs.readdir(path.join('.', 'migrations'), (err, files) => {
+        if (err !== null) {
+          return reject(err)
+        }
+
+        files = files.filter((file) => {
+          return file.split('.').reverse()[0].toLowerCase() === 'sql'
+        })
+
+        files = files.map((file) => {
+          return new Promise((resolve, reject) => {
+            fs.readFile(path.join('.', 'migrations', file), 'utf8', (err, sql) => {
+              if (err !== null) {
+                return reject(err)
+              }
+
+              resolve({
+                id: file.split('_')[0],
+                name: file,
+                sql: sql
+              })
+            })
+          })
+        })
+
+        resolve(Promise.all(files))
+      })
+    })
+  })
+  .then((migrations) => {
+    // Sort by id
+    migrations.sort((a, b) => {
+      return a.id - b.id
+    })
+    // Run each migration in sequence (requires a generator)
+    return t1.sequence(function * () {
+      // Can't yield from nested functions... wtfjs!
+      for (let i = 0; i < migrations.length; i++) {
+        let migration = migrations[i]
+        // Each migration runs in its own inner transaction t2
+        yield t1.tx((t2) => {
+          return t2.oneOrNone('SELECT * FROM migration WHERE id=$1', migration.id)
+          .then((existingMigration) => {
+            if (!existingMigration) {
+              return t2.any(migration.sql)
+              .then(() => {
+                console.log(`${migration.name} applied`)
+                return t2.none(
+                  'INSERT INTO migration(id, name) VALUES($1, $2)',
+                  [migration.id, migration.name]
+                )
+              })
+            } else {
+              console.log(`${migration.name} already applied - skipping.`)
+            }
+          })
+          .catch((err) => {
+            console.log(`Error applying ${migration.name}`)
+            return Promise.reject(err)
+          })
+        })
+      }
+    })
+  })
+})
+.catch((err) => {
+  console.log('Rolling back...')
+  console.error(err)
+  process.exit(1)
+})
 
 // ExpressJS Includes
 const express = require('express')
@@ -22,16 +121,6 @@ hbs.registerPartials(path.join(__dirname, '/views/partials'))
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 hbs.registerHelper('formatDate', function (d) {
   return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()} ${d.getHours()}:${d.getMinutes()}`
-})
-
-// Postgresql Promise Library
-const pgp = require('pg-promise')()
-const db = pgp({
-  host: process.env.PGHOST,
-  port: process.env.PGPORT,
-  database: process.env.PGDATABASE,
-  user: process.env.PGUSER,
-  password: process.env.PGPASSWORD
 })
 
 // Elo Library
@@ -636,4 +725,5 @@ app.get('*', (req, res) => {
 
 app.listen(process.env.PORT || 8080, () => {
   console.log(`Foosilator listening on port ${process.env.PORT || 8080}`)
+  console.log(`NODE_ENV=${NODE_ENV}`)
 })
