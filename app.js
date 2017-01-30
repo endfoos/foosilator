@@ -161,7 +161,7 @@ db.tx((t1) => {
     }
   }
   app.use(session({
-    secret: 'q4IDJtrvnfCPUSVx9OxdQrufur6whFhD7rGLNrlY',
+    secret: process.env.SESSION_SECRET,
     name: 'foosilatorSid',
     cookie: cookieSettings,
     resave: false,
