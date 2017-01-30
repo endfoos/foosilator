@@ -1,5 +1,7 @@
 node_modules
+.deploy
 .git
 .env*
+deploy
 docker-compose.yml
 schema.sql
