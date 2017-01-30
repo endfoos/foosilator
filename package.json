@@ -12,11 +12,18 @@
     "pg-promise": "5.5.0"
   },
   "devDependencies": {
+    "clean-css": "^3.4.23",
+    "node-sass": "^4.1.1",
+    "nodemon": "^1.11.0",
     "standard": "8.6.0"
   },
   "scripts": {
-    "start": "node app.js",
-    "test": "./node_modules/.bin/standard"
+    "start": "app.js",
+    "start-dev": "nodemon -e hbs app.js",
+    "test": "./node_modules/.bin/standard",
+    "build-css": "node-sass --include-path scss scss/app.scss public/css/app.css",
+    "minify-css": "cleancss -o public/css/app-min.css public/css/app.css",
+    "watch-styles": "nodemon -e scss -x \"npm run build-css && npm run minify-css\""
   },
   "repository": {
     "type": "git",

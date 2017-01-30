@@ -1,23 +1,21 @@
 {{> header}}
-<h2>Score a game</h2>
 <section>
+  <h1>Score a game</h1>
   <form action="games" method="post">
     <input type="hidden" value="{{league.id}}" name="leagueId">
-    <div class="field-wrap">
-      <label for="winnerId">
-        Winner
-      </label>
+    <div class="form-field">
+      <label for="winnerId">Winner</label>
       <select name="winnerId" id="winnerId">
-        <option disabled selected value></option>
+        <option disabled value>Please select&hellip;</option>
         {{#each players}}
           <option value="{{this.id}}">{{this.name}}</option>
         {{/each}}
       </select>
     </div>
-    <div class="field-wrap">
-      8 -
+    <label class="hide-tablet-up">Score</label>
+    <div class="form-field multiple-fields no-label">
+      <span class="field-text left">8 &nbsp;&nbsp;-</span>
       <select name="loserScore">
-        <option disabled selected value></option>
         <option value="0">0</option>
         <option value="1">1</option>
         <option value="2">2</option>
@@ -28,50 +26,49 @@
         <option value="7">7</option>
       </select>
     </div>
-    <div class="field-wrap">
-      <label for="loserId">
-        Loser
-      </label>
+    <div class="form-field">
+      <label for="loserId">Loser</label>
       <select name="loserId" id="loserId">
-        <option disabled selected value></option>
+        <option disabled selected value>Please select&hellip;</option>
         {{#each players}}
           <option value="{{this.id}}">{{this.name}}</option>
         {{/each}}
       </select>
     </div>
-    <div class="field-wrap">
-      <input type="submit" value="Score it">
+    <div class="form-field no-label">
+      <input type="submit" value="Score it" />
     </div>
   </form>
 </section>
-<hr>
-<h2>Latest games</h2>
 <section>
-  <table>
-    <thead>
-      <tr>
-        <th>Winner</th>
-        <th>Loser</th>
-        <th>Score</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      {{#each latestGames}}
+  <h1>Latest games</h1>
+  <div class="table-wrap">
+    <table>
+      <thead>
         <tr>
-          <td>{{this.winner_name}}</td>
-          <td>{{this.loser_name}}</td>
-          <td>{{this.winner_score}} - {{this.loser_score}}</td>
-          <td>
-            {{#if @first}}
-              <form method="post" action="/{{../currentLeague}}/games/{{this.id}}/delete">
-                <input type="submit" value="Delete">
-              </form>
-            {{/if}}
-          </td>
+          <th>Winner</th>
+          <th>Loser</th>
+          <th>Score</th>
+          <th></th>
         </tr>
-      {{/each}}
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        {{#each latestGames}}
+          <tr>
+            <td>{{this.winner_name}}</td>
+            <td>{{this.loser_name}}</td>
+            <td>{{this.winner_score}} - {{this.loser_score}}</td>
+            <td class="align-right">
+              {{#if @first}}
+                <form method="post" action="/{{../currentLeague}}/games/{{this.id}}/delete" class="align-right">
+                  <input type="submit" value="Delete" class="link-style">
+                </form>
+              {{/if}}
+            </td>
+          </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
 </section>
 {{> footer}}

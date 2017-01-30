@@ -1,33 +1,55 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <title>Foosilator</title>
+
     <meta charset="utf-8" />
-    <title>Endfoos Foosilator</title>
-    <link rel="icon" type="image/png" href="/images/favicon.png">
-    <link rel="stylesheet" href="/style/main.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    {{!-- Favicon / app icons --}}
+    <link rel="apple-touch-icon" sizes="152x152" href="/images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" href="/images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="/images/favicon-16x16.png" sizes="16x16">
+
+    {{!-- Typekit embed code (uses Andrew's Adobe CC account) --}}
+    <script src="https://use.typekit.net/ejf1ybw.js"></script>
+    <script>try{Typekit.load({ async: true });}catch(e){}</script>
+
+    {{!-- Main stylesheet (compiled from scss files using `npm run watch-css`) --}}
+    <link rel="stylesheet" href="/css/app-min.css">
   </head>
   <body>
-    <div class="header">
-      <h1>Endfoos Foosilator</h1>
-    </div>
-    <div class="full-width-wrapper">
-      <div class="navigation">
-        <ul>
-          <li>
-            <label>Switch league:
-            <select onchange="window.location=this.value">
+    <header class="clearfix">
+      <a href="/" class="hd-logo">Foosilator</a>
+      <a href="#main-nav" class="hd-menu-trigger mob-only js-toggle-menu">
+        <i class="icon-menu"></i>
+      </a>
+    </header>
+    <div class="navigation">
+      {{#if currentLeague}}
+        <div class="name-with-edit-link margin-btm-20">
+          <h2 class="name">{{league.name}}</h2>
+          <div id="league-select-wrap" class="js-hidden-control">
+            <select id="league-select" class="js-navigate-on-change">
               {{#unless currentPage}}<option disabled selected value></option>{{/unless}}
               {{#each activeLeagues}}
                 <option value="/{{this.short_name}}{{#if ../currentPage}}{{../currentPage}}{{else}}/games{{/if}}" {{#if this.isCurrentLeague}}disabled selected{{/if}}>{{this.name}}</option>
               {{/each}}
             </select>
-          </li>
+          </div>
+          <a href="#" class="link js-activate-control" data-target="#league-select-wrap">Switch league</a>
+        </div>
+      {{/if}}
+      <nav class="main-nav">
+        <ul class="main-nav-menu">
           {{#if currentLeague}}
             <li><a href="/{{currentLeague}}/games">Games played</a></li>
             <li><a href="/{{currentLeague}}/rankings">Rankings</a></li>
           {{/if}}
           <li><a href="/players">Manage players</a></li>
           <li><a href="/leagues">Manage leagues</a></li>
+          <li><a href="/settings">Settings</a></li>
         </ul>
-      </div>
-      <div class="content">
+      </nav>
+    </div>
+    <div class="content max-1180">

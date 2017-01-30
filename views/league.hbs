@@ -1,54 +1,67 @@
 {{> header}}
-<h2>Update {{league.name}}</h2>
-<a href="/leagues">Back</a>
 <section>
+  <div class="heading-cols margin-btm-20">
+    <h1 class="heading-left">Update {{league.name}}</h1>
+    <a href="/leagues" class="heading-right button">Back</a>
+  </div>
   <form method="post" action="/leagues/{{league.id}}">
-    <label>Name: <input type="text" name="name" value="{{league.name}}"></label>
-    <label>Short Name (used in urls): <input type="text" name="shortName" value="{{league.short_name}}"></label>
-    <input type="submit" value="Update League">
+    <div class="form-field">
+      <label for="league-name">Name</label>
+      <input type="text" name="name" value="{{league.name}}" id="league-name">
+    </div>
+    <div class="form-field">
+      <label for="league-short-name">Short Name (used in URLs):</label>
+      <input type="text" name="shortName" value="{{league.short_name}}" id="league-short-name">
+    </div>
+    <div class="form-field no-label">
+      <input type="submit" value="Update League">
+    </div>
   </form>
 </section>
-<hr>
-<h2>Add a new player to {{league.name}}</h2>
 <section>
+  <h1>Add player to {{league.name}}</h1>
   <form method="post" action="/leagues/{{league.id}}/players">
-    <label>Player name
-      <select name="playerId">
+    <div class="form-field">
+      <label for="player-select">Player name</label>
+      <select name="playerId" id="player-select">
         <option disabled selected value></option>
         {{#each unaffiliatedPlayers}}
           <option value="{{this.id}}">{{this.name}}</option>
         {{/each}}
       </select>
-    </label>
-    <input type="submit" value="Add Player">
+    </div>
+    <div class="form-field no-label">
+      <input type="submit" value="Add Player">
+    </div>
   </form>
 </section>
-<hr>
-<h2>Players</h2>
-<table>
-  <thead>
-    <tr>
-      <th>Id</th>
-      <th>Name</th>
-      <th>Color</th>
-      <th>Elo Rating</th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    {{#each currentPlayers}}
+{{#if currentPlayers}}
+<div class="table-wrap">
+  <table>
+    <h1>Players</h1>
+    <thead>
       <tr>
-        <td>{{this.id}}</td>
-        <td>{{this.name}}</td>
-        <td><span class="player-color" style="background-color: #{{this.color}}"></span>#{{this.color}}</td>
-        <td>{{this.elo_rating}}</td>
-        <td>
-          <form method="post" action="/leagues/{{../league.id}}/players/{{this.id}}/delete">
-            <input type="submit" value="Remove">
-          </form>
-        </td>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Color</th>
+        <th></th>
       </tr>
-    {{/each}}
-  </tbody>
-</table>
+    </thead>
+    <tbody>
+      {{#each currentPlayers}}
+        <tr>
+          <td>{{this.id}}</td>
+          <td>{{this.name}}</td>
+          <td><span class="player-color" style="background-color: #{{this.color}}"></span>#{{this.color}}</td>
+          <td class="align-right">
+            <form method="post" action="/leagues/{{../league.id}}/players/{{this.id}}/delete" class="table-form">
+              <input type="submit" value="Remove">
+            </form>
+          </td>
+        </tr>
+      {{/each}}
+    </tbody>
+  </table>
+</div>
+{{/if}}
 {{> footer}}

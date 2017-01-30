@@ -1,0 +1,92 @@
+header {
+  background: $black;
+  color: $white;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 10px 20px;
+}
+
+.hd-logo {
+  float: left;
+  padding-left: 35px;
+  line-height: 25px;
+  text-transform: uppercase;
+  text-decoration: none;
+  font-size: 1.8rem;
+  color: $white;
+  font-weight: $bold;
+  background: url(../images/hd-logo.png) no-repeat 0 0;
+  background-size: 25px;
+}
+
+.hd-menu-trigger {
+  float: right;
+  font-size: 2.5rem;
+  line-height: 1;
+  color: $white;
+  transition: color 200ms ease;
+
+  &:hover {
+    color: $white;
+  }
+
+  &.open {
+    color: $primaryColour;
+  }
+}
+
+.navigation {
+  background: $midBlack;
+  color: $white;
+  position: fixed;
+  overflow: auto;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  z-index: 999;
+  margin-top: 45px;
+  padding: 20px;
+  transform: translate(-100%, 0);
+  transition: transform 400ms ease;
+
+  &.open {
+    transform: translate(0, 0);
+  }
+}
+
+@media (min-width: 600px) {
+
+  .hd-menu-trigger {
+    display: none;
+  }
+
+  $menuWidth: 200px;
+
+  .navigation {
+    width: $menuWidth;
+    transform: none;
+    transition: none;
+  }
+
+  .content {
+    padding-left: $menuWidth + 20px;
+  }
+
+}
+
+@media (min-width: 1024px) {
+
+  $menuWidth: 305px;
+
+  .navigation {
+    width: $menuWidth;
+  }
+
+  .content {
+    padding-left: $menuWidth + 30px;
+  }
+
+}

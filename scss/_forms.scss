@@ -1,0 +1,263 @@
+label,
+.field-group-label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 1.6rem;
+  line-height: 1.2;
+  text-transform: uppercase;
+  color: $grey;
+  white-space: nowrap;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="color"],
+input[type="date"],
+input[type="datetime"],
+input[type="search"],
+input[type="tel"],
+input[type="time"],
+input[type="url"],
+textarea,
+select {
+  font-family: $primaryFont;
+  font-weight: $bold;
+  background: #fff;
+  display: block;
+  width: 100%;
+  border: none;
+  border-radius: 4px;
+  padding: 7px 10px;
+  margin: 0;
+  font-size: 1.4rem;
+  line-height: 1.4;
+  color: #000;
+  transition: border-color 200ms ease;
+
+  &:focus {
+    border-color: $primaryColour;
+    outline: none;
+  }
+
+  &.input-tiny {
+    width: 45px;
+  }
+
+  &.input-small {
+    width: 60px;
+  }
+
+  &.input-medium {
+    width: 90px;
+  }
+
+  &.input-regular {
+    width: 120px;
+  }
+
+  &.input-large {
+    width: 200px;
+  }
+
+  &.input-huge {
+    width: 300px;
+  }
+}
+
+select {
+  height: 35px;
+}
+
+textarea {
+  min-height: 80px;
+}
+
+.form-field {
+  display: block;
+  vertical-align: bottom;
+  margin-bottom: 15px;
+  position: relative;
+}
+
+.color-field {
+
+  input {
+    padding-left: 30px;
+  }
+
+  .player-color {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+  }
+}
+
+.form-field[class*="col-"],
+[class*="col-"] .form-field {
+  margin-right: 0 !important;
+}
+
+[class*="col-"] > .form-field {
+  display: block;
+}
+
+[class*="col-"] > .inline-block {
+  display: inline-block;
+}
+
+table .form-field {
+  margin: 0;
+  vertical-align: middle;
+}
+
+.checkable-field {
+
+  input,
+  label {
+    display: inline-block;
+    vertical-align: bottom;
+    line-height: 20px;
+  }
+
+  input {
+    height: 20px;
+    margin: 0 7px 0 0;
+  }
+
+  label {
+    font-size: 1.4rem;
+    margin-bottom: 0;
+  }
+
+  input:checked + label {
+    color: #000;
+  }
+}
+
+.checkable-field-group {
+
+  .checkable-field {
+
+    input,
+    label {
+      height: 20px;
+      line-height: 20px;
+    }
+
+    label {
+      color: #7e7e7e;
+    }
+
+  }
+
+}
+
+.multiple-fields {
+  white-space: nowrap;
+
+  input,
+  select,
+  .field-text {
+    display: inline-block;
+    width: auto;
+  }
+
+  .field-text {
+    font-size: 1.8rem;
+    font-weight: $bold;
+    margin-left: 10px;
+    vertical-align: bottom;
+    line-height: 35px;
+
+    &.left {
+      margin-left: 0;
+      margin-right: 10px;
+    }
+  }
+
+  button,
+  .button {
+    min-width: 0px;
+    margin-left: 10px;
+    vertical-align: top;
+  }
+
+}
+
+@media (min-width: 600px) {
+
+  .form-field {
+    display: inline-block;
+    vertical-align: top;
+    margin-right: 15px;
+    margin-bottom: 15px;
+
+    &.no-label {
+      margin-top: 24px;
+    }
+
+    &.full-width {
+      display: block;
+    }
+
+    &.inline-label {
+
+      label {
+        display: inline-block;
+        line-height: 35px;
+        margin: 0 10px 0 0;
+      }
+
+      input,
+      select {
+        display: inline-block;
+        margin-top: 0;
+        width: auto;
+      }
+
+      input[type="radio"],
+      input[type="checkbox"] {
+        height: 35px;
+      }
+
+    }
+  }
+
+  .checkable-field {
+    padding-right: 20px;
+
+    input,
+    label {
+      margin-top: 24px;
+      line-height: 35px;
+    }
+
+    input {
+      height: 35px;
+      line-height: 35px;
+    }
+
+  }
+
+  .checkable-field-group {
+
+    .checkable-field {
+      margin-right: 10px;
+      vertical-align: top;
+
+      input,
+      label {
+        margin-top: 0;
+      }
+
+    }
+
+  }
+
+  .form-column-button {
+    margin-top: 24px;
+  }
+
+}

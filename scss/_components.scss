@@ -1,0 +1,113 @@
+// League switch element
+.name-with-edit-link {
+  position: relative;
+
+  .name {
+    margin-bottom: 5px;
+  }
+
+  .link {
+    font-weight: $semi;
+    font-size: 1.6rem;
+  }
+}
+
+.js-hidden-control {
+  display: block;
+  height: 30px;
+  width: 100%;
+  overflow: hidden;
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  transition: opacity 200ms ease;
+
+  select {
+    cursor: pointer;
+    background: #fff;
+    width: 100%;
+    font-weight: 700;
+    padding: 0 5px;
+    height: 30px;
+    border: none;
+    border-radius: 3px;
+  }
+
+  &.activated {
+    height: 30px;
+    width: 100%;
+    opacity: 1;
+  }
+}
+
+
+// Navigation menu
+.main-nav-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.main-nav-menu a {
+  display: block;
+  padding: 5px 0;
+  color: $white;
+  font-weight: $semi;
+  text-decoration: none;
+  font-size: 1.6rem;
+
+  .active {
+    font-weight: $bold;
+  }
+}
+
+
+// Buttons
+button,
+.button,
+input[type="submit"] {
+  cursor: pointer;
+  font-family: $primaryFont;
+  font-size: 1.6rem;
+  line-height: 1;
+  color: $white;
+  background: $primaryColour;
+  font-weight: $bold;
+  padding: 10px 25px;
+  border-radius: 25px;
+  border: none;
+  text-decoration: none;
+  transition: background 300ms ease;
+
+  &:hover {
+    background: $primaryColourLight;
+  }
+}
+
+.link-style,
+input[type="submit"].link-style {
+  background: none;
+  color: $primaryColour;
+  font-weight: $regular;
+  padding: 0;
+  border-radius: 0;
+  transition: color 300ms ease;
+
+  &:hover {
+    text-decoration: underline;
+    background: none;
+    color: $primaryColourLight;
+  }
+}
+
+// Sections (with horizontal divider)
+section {
+  padding-bottom: 35px;
+  margin-bottom: 35px;
+  border-bottom: 1px solid rgba(255,255,255,.1);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}

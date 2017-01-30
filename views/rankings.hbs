@@ -1,180 +1,183 @@
 {{> header}}
-<input type="hidden" id="elo-graph-data" data-graphData="{{playerEloSeries}}">
-<svg id="svg-two-week-graph" width="100%" height="300"><g></g></svg>
-<input type="hidden" id="gauge-data" data-gaugeData="{{gaugeData}}">
-<svg id="svg-radial-gauges" width="100%" height="220"></svg>
-<script src="/scripts/d3.4.4.0.min.js"></script>
-<script type="text/javascript">
-  // Elo Rating Graph
-  var margin = {
-    top: 20,
-    right: 80,
-    bottom: 30,
-    left: 50
-  };
+<section>
+  <input type="hidden" id="elo-graph-data" data-graphData="{{playerEloSeries}}">
+  <svg id="svg-two-week-graph" width="100%" height="300"><g></g></svg>
+  <input type="hidden" id="gauge-data" data-gaugeData="{{gaugeData}}">
+  <svg id="svg-radial-gauges" width="100%" height="220"></svg>
+  <script src="/scripts/d3.4.4.0.min.js"></script>
+  <script type="text/javascript">
+    // Elo Rating Graph
+    var margin = {
+      top: 20,
+      right: 80,
+      bottom: 30,
+      left: 50
+    };
 
-  var svgContainer = d3.select('#svg-two-week-graph');
-  var svgEl = d3.select('#svg-two-week-graph g')
-    .append('g')
-      .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');;
+    var svgContainer = d3.select('#svg-two-week-graph');
+    var svgEl = d3.select('#svg-two-week-graph g')
+      .append('g')
+        .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');;
 
-  var width = svgContainer.node().getBoundingClientRect().width - margin.left - margin.right;
+    var width = svgContainer.node().getBoundingClientRect().width - margin.left - margin.right;
 
-  var height = svgContainer.attr('height') - margin.top - margin.bottom;
+    var height = svgContainer.attr('height') - margin.top - margin.bottom;
 
-  var graphDataElement = document.getElementById('elo-graph-data');
-  var graphData = JSON.parse(graphDataElement.getAttribute('data-graphData'));
-  Object.keys(graphData).forEach(function (playerId) {
-    const playerData = graphData[playerId];
-    playerData.forEach(function (d) {
-      d.date = new Date(d.date)
-    });
-  });
-
-  var x = d3.scaleTime().range([0, width]);
-  var y = d3.scaleLinear().range([height, 0]);
-
-  var line = d3.line()
-    .x(function (d) {
-      return x(d.date)
-    })
-    .y(function (d) {
-      return y(d.elo_rating)
+    var graphDataElement = document.getElementById('elo-graph-data');
+    var graphData = JSON.parse(graphDataElement.getAttribute('data-graphData'));
+    Object.keys(graphData).forEach(function (playerId) {
+      const playerData = graphData[playerId];
+      playerData.forEach(function (d) {
+        d.date = new Date(d.date)
+      });
     });
 
-  const dataMerged = d3.merge(d3.values(graphData));
+    var x = d3.scaleTime().range([0, width]);
+    var y = d3.scaleLinear().range([height, 0]);
 
-  x.domain(d3.extent(dataMerged, function (d) {
-    return d.date;
-  }));
+    var line = d3.line()
+      .x(function (d) {
+        return x(d.date)
+      })
+      .y(function (d) {
+        return y(d.elo_rating)
+      });
 
-  y.domain(d3.extent(dataMerged, function (d) {
-      return d.elo_rating;
-  })).nice();
+    const dataMerged = d3.merge(d3.values(graphData));
 
-  Object.keys(graphData).forEach(function (playerId) {
-    const playerData = graphData[playerId];
+    x.domain(d3.extent(dataMerged, function (d) {
+      return d.date;
+    }));
 
-    svgEl.append('path')
-      .attr('class', 'line')
-      .style('stroke', playerData[playerData.length -1].color)
-      .attr('d', line(playerData));
+    y.domain(d3.extent(dataMerged, function (d) {
+        return d.elo_rating;
+    })).nice();
 
-    var lastDatum = playerData[playerData.length - 1];
+    Object.keys(graphData).forEach(function (playerId) {
+      const playerData = graphData[playerId];
 
-    svgEl.append('text')
-      .attr('transform', 'translate(' + x(lastDatum.date) + ',' + y(lastDatum.elo_rating) + ')')
-      .attr('x', 3)
-      .attr('dy', '0.35em')
-      .style('font', '10px sans-serif')
-      .text(lastDatum.player_name);
-  });
+      svgEl.append('path')
+        .attr('class', 'line')
+        .style('stroke', playerData[playerData.length -1].color)
+        .attr('d', line(playerData));
 
-  svgEl.append('g')
-    .attr('class', 'axis')
-    .attr('transform', 'translate(0,' + height + ')')
-    .call(d3.axisBottom(x));
+      var lastDatum = playerData[playerData.length - 1];
 
-  svgEl.append('g')
-    .attr('class', 'axis')
-    .call(d3.axisLeft(y))
-    .append('text')
-      .attr('transform', 'rotate(-90)')
-      .attr('y', 6)
-      .attr('dy', '0.71em')
-      .text('Elo Rating');
-</script>
-<script>
-  // Percent Gauges
-  var gaugeDataElement = document.getElementById('gauge-data');
-  var gaugeData = JSON.parse(gaugeDataElement.getAttribute('data-gaugeData'));
+      svgEl.append('text')
+        .attr('transform', 'translate(' + x(lastDatum.date) + ',' + y(lastDatum.elo_rating) + ')')
+        .attr('x', 3)
+        .attr('dy', '0.35em')
+        .style('font', '10px sans-serif')
+        .text(lastDatum.player_name);
+    });
 
-  var svgContainer = d3.select('#svg-radial-gauges');
-  var width = svgContainer.node().getBoundingClientRect().width;
-  var gauges = [];
-  var height = svgContainer.attr('height');
+    svgEl.append('g')
+      .attr('class', 'axis')
+      .attr('transform', 'translate(0,' + height + ')')
+      .call(d3.axisBottom(x));
 
-  var arc = d3.arc()
-    .innerRadius(75)
-    .outerRadius(80)
-    .cornerRadius(5)
-    .startAngle(0);
+    svgEl.append('g')
+      .attr('class', 'axis')
+      .call(d3.axisLeft(y))
+      .append('text')
+        .attr('transform', 'rotate(-90)')
+        .attr('y', 6)
+        .attr('dy', '0.71em')
+        .text('Elo Rating');
+  </script>
+  <script>
+    // Percent Gauges
+    var gaugeDataElement = document.getElementById('gauge-data');
+    var gaugeData = JSON.parse(gaugeDataElement.getAttribute('data-gaugeData'));
 
-  var microArc = d3.arc()
-    .innerRadius(71)
-    .outerRadius(74)
-    .cornerRadius(2)
-    .startAngle(0);
+    var svgContainer = d3.select('#svg-radial-gauges');
+    var width = svgContainer.node().getBoundingClientRect().width;
+    var gauges = [];
+    var height = svgContainer.attr('height');
 
-  for (var i = 0; i < gaugeData.length; i++) {
-    var gauge = svgContainer.append('g')
-      .attr('transform', 'translate(' + (i + 1) * width / (gaugeData.length + 1) + ',' + height / 2 + ')');
+    var arc = d3.arc()
+      .innerRadius(75)
+      .outerRadius(80)
+      .cornerRadius(5)
+      .startAngle(0);
 
-    gauge.append('circle')
-      .attr('r', 68)
-      .style('fill', '#0d0d0d');
+    var microArc = d3.arc()
+      .innerRadius(71)
+      .outerRadius(74)
+      .cornerRadius(2)
+      .startAngle(0);
 
-    gauge.append('path')
-      .datum({endAngle: (Math.random() + 1) * Math.PI})
-      .style('stroke', 'none')
-      .style('fill', '#2b1542')
-      .attr('d', microArc);
+    for (var i = 0; i < gaugeData.length; i++) {
+      var gauge = svgContainer.append('g')
+        .attr('transform', 'translate(' + (i + 1) * width / (gaugeData.length + 1) + ',' + height / 2 + ')');
 
-    gauge.append('text')
-      .text((gaugeData[i].value * 100).toFixed(0))
-      .attr('text-anchor', 'middle')
-      .attr('x', - (5 * (gaugeData[i].value * 100).toFixed(0).length))
-      .style('fill', '#ffffff')
-      .attr('font-size', '30px');
+      gauge.append('circle')
+        .attr('r', 68)
+        .style('fill', '#0d0d0d');
 
-    gauge.append('text')
-      .text('%')
-      .attr('text-anchor', 'middle')
-      .attr('x', 20)
-      .attr('font-size', '20px');
+      gauge.append('path')
+        .datum({endAngle: (Math.random() + 1) * Math.PI})
+        .style('stroke', 'none')
+        .style('fill', '#2b1542')
+        .attr('d', microArc);
 
-    gauge.append('text')
-      .attr('text-anchor', 'middle')
-      .attr('y', 20)
-      .text(gaugeData[i].title);
+      gauge.append('text')
+        .text((gaugeData[i].value * 100).toFixed(0))
+        .attr('text-anchor', 'middle')
+        .attr('x', - (5 * (gaugeData[i].value * 100).toFixed(0).length))
+        .style('fill', '#ffffff')
+        .attr('font-size', '30px');
 
-    gauge.append('text')
-      .text(gaugeData[i].name)
-      .attr('text-anchor', 'middle')
-      .attr('y', 100)
-      .style('fill', '#ffffff');
+      gauge.append('text')
+        .text('%')
+        .attr('text-anchor', 'middle')
+        .attr('x', 20)
+        .attr('font-size', '20px');
 
-    gauge.append('path')
-      .datum({endAngle: gaugeData[i].value * 2 * Math.PI})
-      .style('stroke', 'none')
-      .style('fill', gaugeData[i].color)
-      .attr('d', arc);
+      gauge.append('text')
+        .attr('text-anchor', 'middle')
+        .attr('y', 20)
+        .text(gaugeData[i].title);
 
-    gauges[i] = gauge;
-  }
-</script>
-<hr>
-<h2>Rankings</h2>
-<table>
-  <thead>
-    <tr>
-      <th>Player rank</th>
-      <th>Wins</th>
-      <th>Losses</th>
-      <th>Total</th>
-      <th>Elo rating</th>
-    </tr>
-  </thead>
-  <tbody>
-    {{#each players}}
-      <tr>
-        <td><span class="player-color" style="background-color: #{{this.color}}"></span>{{this.name}}</td>
-        <td>{{this.games_won}}</td>
-        <td>{{this.games_lost}}</td>
-        <td>{{this.total_games}}</td>
-        <td>{{this.elo_rating}}</td>
-      </tr>
-    {{/each}}
-  </tbody>
-</table>
+      gauge.append('text')
+        .text(gaugeData[i].name)
+        .attr('text-anchor', 'middle')
+        .attr('y', 100)
+        .style('fill', '#ffffff');
+
+      gauge.append('path')
+        .datum({endAngle: gaugeData[i].value * 2 * Math.PI})
+        .style('stroke', 'none')
+        .style('fill', gaugeData[i].color)
+        .attr('d', arc);
+
+      gauges[i] = gauge;
+    }
+  </script>
+</section>
+<section>
+  <h1>Rankings</h1>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Player rank</th>
+          <th class="align-center">Wins</th>
+          <th class="align-center">Losses</th>
+          <th class="align-center">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each players}}
+          <tr>
+            <td><span class="player-color" style="background-color: #{{this.color}}"></span> {{this.name}}</td>
+            <td class="align-center">{{this.games_won}}</td>
+            <td class="align-center">{{this.games_lost}}</td>
+            <td class="align-center">{{this.total_games}}</td>
+          </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+</section>
 {{> footer}}

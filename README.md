@@ -18,6 +18,12 @@ Update .env
 
 Navigate to http://localhost:8888/ or another port as specified in .env
 
+`npm start-dev` - Runs the app and watches templates for changes
+
+`npm run watch-styles` - Watches for changes to any `.scss` files and recompiles
+the `main.css` stylesheet
+
+
 ## Docker
 
 `docker build -t foosilator .`
