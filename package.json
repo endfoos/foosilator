@@ -4,6 +4,7 @@
   "description": "A Middle-out Foosball Platform",
   "main": "foosilator.js",
   "dependencies": {
+    "bcrypt": "1.0.2",
     "body-parser": "1.15.2",
     "elo-js": "1.0.1",
     "envoodoo": "2.1.1",
@@ -11,6 +12,10 @@
     "express-session": "1.15.0",
     "hbs": "4.0.1",
     "helmet": "3.4.0",
+    "passport": "0.3.2",
+    "passport-facebook": "2.1.1",
+    "passport-google-oauth20": "1.0.0",
+    "passport-local": "1.0.0",
     "pg-promise": "5.5.0"
   },
   "devDependencies": {

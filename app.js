@@ -162,6 +162,7 @@ db.tx((t1) => {
   }
   app.use(session({
     secret: 'q4IDJtrvnfCPUSVx9OxdQrufur6whFhD7rGLNrlY',
+    name: 'foosilatorSid',
     cookie: cookieSettings,
     resave: false,
     saveUninitialized: false,
@@ -772,6 +773,461 @@ db.tx((t1) => {
       })
       console.error(err)
     })
+  })
+
+  const brightColorHex = () => {
+    const dark1 = Math.floor(Math.random() * 100) + 20
+    const bright1 = Math.floor(Math.random() * 100) + 155
+    const bright2 = Math.floor(Math.random() * 100) + 155
+    let r = 0
+    let b = 0
+    let g = 0
+    switch (Math.floor(Math.random() * 6)) {
+      case 0:
+        r = dark1
+        b = bright1
+        g = bright2
+        break
+      case 1:
+        r = bright1
+        b = dark1
+        g = bright2
+        break
+      case 2:
+        r = bright1
+        b = bright2
+        g = dark1
+        break
+      case 3:
+        r = dark1
+        b = bright1 - 135
+        g = bright2
+        break
+      case 4:
+        r = bright1
+        b = dark1
+        g = bright2 - 135
+        break
+      case 5:
+        r = dark1
+        b = bright1
+        g = bright2 - 135
+        break
+    }
+    return r.toString(16) + b.toString(16) + g.toString(16)
+  }
+
+  // Configure Passport
+  const passport = require('passport')
+  const bcrypt = require('bcrypt')
+  const PassportLocalStrategy = require('passport-local').Strategy
+
+  const PassportGoogleStrategy = require('passport-google-oauth20').Strategy
+  const PassportFacebookStrategy = require('passport-facebook').Strategy
+
+  passport.use(new PassportLocalStrategy(
+    {
+      usernameField: 'email',
+      passwordField: 'password'
+    },
+    (email, password, done) => {
+      db.oneOrNone(`
+        SELECT * FROM registered_account
+        INNER JOIN player
+        ON player.id = registered_account.player_id
+        WHERE email=$1
+        `,
+        [email]
+      )
+      .then((user) => {
+        if (!user) {
+          return done(null, false)
+        } else {
+          return bcrypt.compare(password, user.password)
+          .then((passwordIsCorrect) => {
+            if (!passwordIsCorrect) {
+              return done(null, false)
+            } else {
+              delete user.password
+              return done(null, user)
+            }
+          })
+        }
+      })
+      .catch(done)
+    }
+  ))
+
+  passport.use(new PassportGoogleStrategy(
+    {
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: process.env.GOOGLE_CALLBACK_URL
+    },
+    (accessToken, refreshToken, profile, done) => {
+      db.oneOrNone(`
+        SELECT * FROM google_account
+        INNER JOIN player
+        ON player.id = google_account.player_id
+        where google_id=$1
+        `,
+        [profile.id]
+      )
+      .then((user) => {
+        // Create new user
+        if (!user) {
+          return db.tx((t) => {
+            return t.one(`
+              INSERT INTO player(name, color) VALUES($1, $2) RETURNING id
+              `,
+              [profile.displayName, brightColorHex()]
+            )
+            .then((data) => {
+              return t.none(`
+                INSERT INTO google_account(player_id, google_id) VALUES($1, $2)
+                `,
+                [data.id, profile.id]
+              )
+            })
+          })
+          .then(() => {
+            return db.one(`
+              SELECT * FROM google_account
+              INNER JOIN player
+              ON player.id = google_account.player_id
+              where google_id=$1
+              `,
+              [profile.id]
+            )
+          })
+        } else {
+          return Promise.resolve(user)
+        }
+      })
+      .then((user) => {
+        return done(null, user)
+      })
+      .catch(done)
+    }
+  ))
+
+  passport.use(new PassportFacebookStrategy(
+    {
+      clientID: process.env.FACEBOOK_APP_ID,
+      clientSecret: process.env.FACEBOOK_APP_SECRET,
+      callbackURL: process.env.FACEBOOK_CALLBACK_URL
+    },
+    (accessToken, refreshToken, profile, done) => {
+      db.oneOrNone(`
+        SELECT * FROM facebook_account
+        INNER JOIN player
+        ON player.id = facebook_account.player_id
+        where facebook_id=$1
+        `,
+        [profile.id]
+      )
+      .then((user) => {
+        // Create new user
+        if (!user) {
+          return db.tx((t) => {
+            return t.one(`
+              INSERT INTO player(name, color) VALUES($1, $2) RETURNING id
+              `,
+              [profile.displayName, brightColorHex()]
+            )
+            .then((data) => {
+              return t.none(`
+                INSERT INTO facebook_account(player_id, facebook_id) VALUES($1, $2)
+                `,
+                [data.id, profile.id]
+              )
+            })
+          })
+          .then(() => {
+            return db.one(`
+              SELECT * FROM facebook_account
+              INNER JOIN player
+              ON player.id = facebook_account.player_id
+              where facebook_id=$1
+              `,
+              [profile.id]
+            )
+          })
+        } else {
+          return Promise.resolve(user)
+        }
+      })
+      .then((user) => {
+        return done(null, user)
+      })
+      .catch(done)
+    }
+  ))
+
+  passport.serializeUser((user, done) => {
+    done(null, user.id)
+  })
+
+  passport.deserializeUser((id, done) => {
+    db.oneOrNone('SELECT * FROM player WHERE id=$1', [id])
+    .then((user) => {
+      done(null, user)
+    })
+    .catch(done)
+  })
+
+  app.use(passport.initialize())
+  app.use(passport.session())
+
+  // Login landing page
+  app.get('/auth/login', (req, res) => {
+    res.render('login')
+  })
+
+  // Login with email/password
+  app.post(
+    '/auth/login',
+    passport.authenticate(
+      'local',
+      {
+        failureRedirect: '/login'
+      }
+    ),
+    (req, res) => {
+      if (req.session.attemptedUrl) {
+        const attemptedUrl = req.session.attemptedUrl
+        delete req.session.attemptedUrl
+        res.redirect(attemptedUrl)
+      } else {
+        res.redirect('/')
+      }
+    }
+  )
+
+  // Login with Google
+  app.get(
+    '/auth/google',
+    passport.authenticate(
+      'google',
+      {
+        scope: ['https://www.googleapis.com/auth/plus.login'],
+        prompt: 'select_account'
+      }
+    )
+  )
+
+  // Google OAuth2 Callback
+  app.get(
+    '/auth/google/callback',
+    passport.authenticate(
+      'google',
+      { failureRedirect: '/login' }
+    ),
+    (req, res) => {
+      if (req.session.attemptedUrl) {
+        const attemptedUrl = req.session.attemptedUrl
+        delete req.session.attemptedUrl
+        res.redirect(attemptedUrl)
+      } else {
+        res.redirect('/')
+      }
+    }
+  )
+
+  // Login with Facebook
+  app.get(
+    '/auth/facebook',
+    passport.authenticate('facebook')
+  )
+
+  // Facebook OAuth2 Callback
+  app.get(
+    '/auth/facebook/callback',
+    passport.authenticate(
+      'facebook',
+      {
+        failureRedirect: '/login'
+      }
+    ),
+    (req, res) => {
+      if (req.session.attemptedUrl) {
+        const attemptedUrl = req.session.attemptedUrl
+        delete req.session.attemptedUrl
+        res.redirect(attemptedUrl)
+      } else {
+        res.redirect('/')
+      }
+    }
+  )
+
+  // Create new account
+  app.post('/auth/register', (req, res) => {
+    let { name, email, password } = req.body
+    name = name.trim()
+    email = email.trim()
+    const gCaptureResponse = req.body['g-recaptcha-response']
+    const errors = {}
+    if (name.length < 1) {
+      errors.name = 'Name too short'
+    }
+    if (!/.+@.+/.test(email)) {
+      errors.email = 'Email address invalid'
+    }
+    if (password.length <= 8) {
+      errors.password = 'Password must be longer than 8 characters'
+    }
+    if (!gCaptureResponse) {
+      errors.capture = 'Please prove you are not a bot'
+    }
+    // Fail fast - then do more expensive checks
+    if (Object.keys(errors).length > 0) {
+      res.render('login', {
+        registerErrors: errors,
+        registerValues: {
+          email: email,
+          name: name
+        }
+      })
+    } else {
+      db.none('SELECT * FROM registered_account WHERE email=$1', [email])
+      .then(() => {
+        // Validate Google Capture
+        return new Promise((resolve, reject) => {
+          const https = require('https')
+          const querystring = require('querystring')
+
+          const postData = querystring.stringify({
+            secret: process.env.GOOGLE_RECAPTCHA_SECRET,
+            response: gCaptureResponse
+          })
+
+          const requestOptions = {
+            hostname: 'www.google.com',
+            path: '/recaptcha/api/siteverify',
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'Content-Length': Buffer.byteLength(postData)
+            }
+          }
+
+          const req = https.request(requestOptions, (res) => {
+            res.setEncoding('utf8')
+            let data = ''
+            res.on('data', (chunk) => {
+              data += chunk
+            })
+            res.on('end', () => {
+              try {
+                const result = JSON.parse(data)
+
+                if (!result.success) {
+                  return reject(new Error('Google Capture Error'))
+                }
+                resolve()
+              } catch (err) {
+                return reject(err)
+              }
+            })
+          })
+
+          req.on('error', (err) => {
+            reject(err)
+          })
+
+          req.write(postData)
+          req.end()
+        })
+      })
+      .then(() => {
+        // Register New Player
+        return db.tx((t) => {
+          return t.one(`
+              INSERT INTO player(name, color)
+              VALUES($1, $2)
+              RETURNING id
+            `,
+            [name, brightColorHex()]
+          )
+          .then((data) => {
+            return bcrypt.hash(password, parseInt(process.env.BCRYPT_SALT_ROUNDS, 10))
+            .then((hashedPassword) => {
+              return t.none(`
+                  INSERT INTO registered_account(player_id, email, password)
+                  VALUES($1, $2, $3)
+                `,
+                [data.id, email, hashedPassword]
+              )
+            })
+          })
+        })
+        .then(() => {
+          return db.one(`
+              SELECT id, name, color, is_active
+              FROM registered_account
+              INNER JOIN player ON player.id = player_id
+              WHERE email=$1
+            `,
+            [email]
+          )
+        })
+      })
+      .then((user) => {
+        // Login user using passport
+        return new Promise((resolve, reject) => {
+          req.login(user, (err) => {
+            if (err) {
+              return reject(err)
+            }
+            resolve()
+          })
+        })
+      })
+      .then(() => {
+        // Redirect new user to landing page
+        res.redirect('/')
+      })
+      .catch((err) => {
+        if (err.name === 'QueryResultError') {
+          res.render('login', {
+            registerErrors: {
+              email: 'Email address is already registered'
+            },
+            registerValues: {
+              email: email,
+              name: name
+            }
+          })
+        } else if (err.message === 'Google Capture Error') {
+          res.render('login', {
+            registerErrors: {
+              capture: 'Rejected'
+            },
+            registerValues: {
+              email: email,
+              name: name
+            }
+          })
+        } else {
+          res.render('error', {
+            error: err
+          })
+          console.error(err)
+        }
+      })
+    }
+  })
+
+  // Reset password
+  app.post('/auth/resetPassword', (req, res) => {
+    // TODO: Implement Emailing
+    res.redirect('/')
+  })
+
+  // Logout
+  app.all('/auth/logout', (req, res) => {
+    req.logout()
+    res.redirect('/')
   })
 
   app.get('*', (req, res) => {
