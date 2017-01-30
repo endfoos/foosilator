@@ -18,11 +18,12 @@
     "standard": "8.6.0"
   },
   "scripts": {
-    "start": "nodemon -e hbs app.js",
+    "start": "app.js",
+    "start-dev": "nodemon -e hbs app.js",
     "test": "./node_modules/.bin/standard",
     "build-css": "node-sass --include-path scss scss/app.scss public/css/app.css",
     "minify-css": "cleancss -o public/css/app-min.css public/css/app.css",
-    "watch-css": "nodemon -e scss -x \"npm run build-css && npm run minify-css\""
+    "watch-styles": "nodemon -e scss -x \"npm run build-css && npm run minify-css\""
   },
   "repository": {
     "type": "git",
