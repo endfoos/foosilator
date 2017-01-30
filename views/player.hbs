@@ -1,18 +1,22 @@
 {{> header}}
-<h2>Update {{player.name}}</h2>
-<a href="/players">Back</a>
-<form method="post" action="/players/{{player.id}}">
-  <div class="field-wrap">
-    <label for="nameField">Name</label>
-    <input type="text" name="name" id="nameField" value="{{player.name}}">
+<section>
+  <div class="heading-cols margin-btm-20">
+    <h1 class="heading-left">Update Player Details</h1>
+    <a href="/players" class="button heading-right">Back</a>
   </div>
-  <div class="field-wrap">
-    <label for="colorField">Color</label>
-    <input type="text" name="color" id="colorField" value="{{player.color}}">
-    <span class="player-color" style="background-color: #{{player.color}}"></span>
-  </div>
-  <div class="field-wrap">
-    <input type="submit" value="Update Player">
-  </div>
-</form>
+  <form method="post" action="/players/{{player.id}}">
+    <div class="form-field">
+      <label for="nameField">Name</label>
+      <input type="text" name="name" id="nameField" value="{{player.name}}">
+    </div>
+    <div class="form-field color-field">
+      <label for="colorField">Color</label>
+      <input type="text" name="color" id="colorField" value="{{player.color}}">
+      <span class="player-color" style="background-color: #{{player.color}}"></span>
+    </div>
+    <div class="form-field no-label">
+      <input type="submit" value="Update Player">
+    </div>
+  </form>
+</section>
 {{> footer}}

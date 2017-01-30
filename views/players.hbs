@@ -1,83 +1,84 @@
 {{> header}}
-<h2>Manage players</h2>
-<h3>Create New Player</h3>
 <section>
+  <h1>Create Player</h1>
   <form method="post" action="/players">
-    <div class="field-wrap">
+    <div class="form-field">
       <label for="nameField">Name</label>
       <input type="text" name="name" id="nameField">
     </div>
-    <div class="field-wrap">
+    <div class="form-field">
       <label for="colorField">Color</label>
       <input type="text" name="color" id="colorField">
     </div>
-    <div class="field-wrap">
+    <div class="form-field no-label">
       <input type="submit" value="Add Player">
     </div>
   </form>
 </section>
-<hr>
-<h3>Players</h3>
-  <section>
-  <table>
-    <thead>
-      <tr>
-        <th>Id</th>
-        <th>Name</th>
-        <th>Color</th>
-        <th>Date Created</th>
-        <th></th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      {{#each players}}
-        <tr>
-          <td>{{this.id}}</td>
-          <td>{{this.name}}</td>
-          <td><span class="player-color" style="background-color: #{{this.color}}"></span>#{{this.color}}</td>
-          <td>{{formatDate this.created_at}}</td>
-          <td><a href="/players/{{this.id}}">Update</a></td>
-          <td>
-            <form method="post" action="/players/{{this.id}}/deactivate">
-              <input type="submit" value="Deactivate">
-            </form>
-          </td>
-        </tr>
-      {{/each}}
-    </tbody>
-  </table>
-</section>
-<hr>
-<h3>Inactive Players</h3>
 <section>
-  <table>
-    <thead>
-      <tr>
-        <th>Id</th>
-        <th>Name</th>
-        <th>Color</th>
-        <th>Date Created</th>
-        <th></th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      {{#each inactivePlayers}}
+  <h1>Players</h1>
+  <div class="table-wrap">
+    <table>
+      <thead>
         <tr>
-          <td>{{this.id}}</td>
-          <td>{{this.name}}</td>
-          <td><span class="player-color" style="background-color: #{{this.color}}"></span>#{{this.color}}</td>
-          <td>{{formatDate this.created_at}}</td>
-          <td><a href="/players/{{this.id}}">Update</a></td>
-          <td>
-            <form method="post" action="/players/{{this.id}}/reactivate">
-              <input type="submit" value="Reactivate">
-            </form>
-          </td>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Color</th>
+          <th>Date Created</th>
+          <th></th>
         </tr>
-      {{/each}}
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        {{#each players}}
+          <tr>
+            <td>{{this.id}}</td>
+            <td>{{this.name}}</td>
+            <td><span class="player-color" style="background-color: #{{this.color}}"></span>#{{this.color}}</td>
+            <td>{{formatDate this.created_at}}</td>
+            <td class="align-right">
+              <a href="/players/{{this.id}}">Update</a>
+              <form method="post" action="/players/{{this.id}}/deactivate" class="table-form margin-left-15">
+                <input type="submit" value="Deactivate">
+              </form>
+            </td>
+          </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
 </section>
+{{#if inactivePlayers}}
+<section>
+  <h1>Inactive Players</h1>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Color</th>
+          <th>Date Created</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each inactivePlayers}}
+          <tr>
+            <td>{{this.id}}</td>
+            <td>{{this.name}}</td>
+            <td><span class="player-color" style="background-color: #{{this.color}}"></span>#{{this.color}}</td>
+            <td>{{formatDate this.created_at}}</td>
+            <td class="align-right">
+              <a href="/players/{{this.id}}" class="margin-right-15">Update</a>
+              <form method="post" action="/players/{{this.id}}/reactivate" class="table-form">
+                <input type="submit" value="Activate">
+              </form>
+            </td>
+          </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+</section>
+{{/if}}
 {{> footer}}
