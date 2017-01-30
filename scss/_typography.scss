@@ -50,3 +50,45 @@ a {
 .align-right {
   text-align: right;
 }
+
+.align-center {
+  text-align: center;
+}
+
+.heading-cols:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+.heading-left {
+  display: block;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.heading-right {
+  margin-bottom: 10px;
+
+  &.button {
+    margin-top: 10px;
+  }
+}
+
+@media (min-width: 768px) {
+
+  .heading-left {
+    float: left;
+    width: auto;
+    max-width: 80%;
+    margin-bottom: 0;
+  }
+
+  .heading-right {
+    float: right;
+    width: auto;
+    max-width: 80%;
+    margin-bottom: 0;
+  }
+
+}

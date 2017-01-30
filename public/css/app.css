@@ -114,6 +114,36 @@ a {
 .align-right {
   text-align: right; }
 
+.align-center {
+  text-align: center; }
+
+.heading-cols:after {
+  content: "";
+  display: table;
+  clear: both; }
+
+.heading-left {
+  display: block;
+  width: 100%;
+  margin-bottom: 10px; }
+
+.heading-right {
+  margin-bottom: 10px; }
+  .heading-right.button {
+    margin-top: 10px; }
+
+@media (min-width: 768px) {
+  .heading-left {
+    float: left;
+    width: auto;
+    max-width: 80%;
+    margin-bottom: 0; }
+  .heading-right {
+    float: right;
+    width: auto;
+    max-width: 80%;
+    margin-bottom: 0; } }
+
 /**
   Containers
 */
@@ -422,6 +452,9 @@ td {
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   white-space: nowrap; }
 
+.table-form {
+  display: inline-block; }
+
 label,
 .field-group-label {
   display: block;
@@ -567,7 +600,16 @@ textarea {
 .form-field {
   display: block;
   vertical-align: bottom;
-  margin-bottom: 15px; }
+  margin-bottom: 15px;
+  position: relative; }
+
+.color-field input {
+  padding-left: 30px; }
+
+.color-field .player-color {
+  position: absolute;
+  left: 10px;
+  bottom: 10px; }
 
 .form-field[class*="col-"],
 [class*="col-"] .form-field {
@@ -730,6 +772,7 @@ input[type="submit"] {
   padding: 10px 25px;
   border-radius: 25px;
   border: none;
+  text-decoration: none;
   transition: background 300ms ease; }
   button:hover,
   .button:hover,

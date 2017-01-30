@@ -78,6 +78,20 @@ textarea {
   display: block;
   vertical-align: bottom;
   margin-bottom: 15px;
+  position: relative;
+}
+
+.color-field {
+
+  input {
+    padding-left: 30px;
+  }
+
+  .player-color {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+  }
 }
 
 .form-field[class*="col-"],
