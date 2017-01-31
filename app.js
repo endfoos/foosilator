@@ -253,7 +253,7 @@ app.get('/:league_short_name/rankings', (req, res) => {
           player_to_league.elo_rating as elo_rating
         FROM player
         INNER JOIN player_to_league ON player_to_league.player_id=player.id
-        WHERE player_to_league.league_id=$1
+        WHERE player_to_league.league_id=$1 AND player.is_active=true
         GROUP BY (player.id, player_to_league.elo_rating)
         ORDER BY elo_rating DESC
       `, [league.id]),
@@ -272,6 +272,7 @@ app.get('/:league_short_name/rankings', (req, res) => {
             AND created_at > CURRENT_DATE - INTERVAL '14 days'
           ORDER BY game.created_at DESC
         ) elo_change ON true
+        WHERE player.is_active=true
         ORDER BY player.id
       `, [league.id]),
       db.manyOrNone('SELECT id, name, short_name FROM league WHERE is_active=true ORDER BY name ASC')
