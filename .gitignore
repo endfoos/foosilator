@@ -1,6 +1,10 @@
 # Env file
 .env
 .env-database
+.env-deploy
+
+# Deploy directory
+.deploy
 
 # Logs
 logs
