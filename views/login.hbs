@@ -1,0 +1,65 @@
+{{> header}}
+<script src='https://www.google.com/recaptcha/api.js'></script>
+<div style="width: 50%; float:left;">
+  <h2>Login</h2>
+  <section>
+    <div>
+      <a href="/auth/google">Google</a>
+      <a href="/auth/facebook">Facebook</a>
+    </div>
+    <p>Or with a registered account:</p>
+    <form action="/auth/login" method="post">
+      <div class="field-wrap">
+        <label for="loginEmailField">
+          Your Email Address
+        </label>
+        <input type="email" id="loginEmailField" name="email">
+      </div>
+      <div class="field-wrap">
+        <label for="loginPasswordField">
+          Your Password
+        </label>
+        <input type="password" id="loginPasswordField" name="password">
+      </div>
+      <div class="field-wrap">
+        <input type="submit" value="Log in">
+      </div>
+    </form>
+  </section>
+</div>
+<div style="width: 50%; float:left;">
+  <h2>Not registered?</h2>
+  <section>
+    <form action="/auth/register" method="post">
+      <div class="field-wrap">
+        <label for="registerNameField">
+          Your Name
+        </label>
+        <input type="text" id="registerNameField" name="name" value="{{registerValues.name}}">
+        <div class="field-error">{{registerErrors.name}}</div>
+      </div>
+      <div class="field-wrap">
+        <label for="registerEmailField">
+          Your Email Address
+        </label>
+        <input type="email" id="registerEmailField" name="email" value="{{registerValues.email}}">
+        <div class="field-error">{{registerErrors.email}}</div>
+      </div>
+      <div class="field-wrap">
+        <label for="registerPasswordField">
+          Your Password
+        </label>
+        <input type="password" id="registerPasswordField" name="password">
+        <div class="field-error">{{registerErrors.password}}</div>
+      </div>
+      <div class="field-wrap">
+        <div class="g-recaptcha" data-sitekey="6LfcohMUAAAAAGeSK9148TW0k_t_KJUYCl06o17O"></div>
+        <div class="field-error">{{registerErrors.capture}}</div>
+      </div>
+      <input type="submit" value="Register">
+    </form>
+  </section>
+</div>
+<div style="clear:both"></div>
+<hr>
+{{> footer}}
