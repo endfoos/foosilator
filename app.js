@@ -64,7 +64,7 @@ app.get('/', (req, res) => {
 // Games played landing page
 app.get('/:league_short_name/games', (req, res) => {
     db.task(t=>{
-        t.one('SELECT id, name from league WHERE short_name=$1 AND is_active=true', [req.params.league_short_name])
+        return t.one('SELECT id, name from league WHERE short_name=$1 AND is_active=true', [req.params.league_short_name])
             .then((league) => {
                 return t.batch([
                     league,
@@ -241,7 +241,7 @@ app.post('/:league_short_name/games/:id/delete', (req, res) => {
 // Rankings Landing Page
 app.get('/:league_short_name/rankings', (req, res) => {
     db.task(t=>{
-        t.one('SELECT id, name from league WHERE short_name=$1', [req.params.league_short_name])
+        return t.one('SELECT id, name from league WHERE short_name=$1', [req.params.league_short_name])
             .then((league) => {
                 return t.batch([
                     league,
