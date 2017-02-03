@@ -58,7 +58,7 @@
 
       svgEl.append('path')
         .attr('class', 'line')
-        .style('stroke', playerData[playerData.length -1].color)
+        .style('stroke', '#' + playerData[playerData.length -1].color)
         .attr('d', line(playerData));
 
       var lastDatum = playerData[playerData.length - 1];
@@ -161,7 +161,7 @@
       gauge.append('path')
         .datum({endAngle: gaugeData[i].value * 2 * Math.PI})
         .style('stroke', 'none')
-        .style('fill', gaugeData[i].color)
+        .style('fill', '#' + gaugeData[i].color)
         .attr('d', arc);
 
       gauges[i] = gauge;
