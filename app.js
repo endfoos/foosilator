@@ -243,18 +243,21 @@ app.get('/:league_short_name/rankings', (req, res) => {
     return Promise.all([
       league,
       db.manyOrNone(`
-        SELECT
-          player.id,
-          name,
-          color,
-          (SELECT count(id) FROM game WHERE winner_id=player.id AND league_id=$1) as games_won,
-          (SELECT count(id) FROM game WHERE loser_id=player.id AND league_id=$1) as games_lost,
-          (SELECT count(id) FROM game WHERE (winner_id = player.id OR loser_id=player.id) AND league_id=$1) as total_games,
-          player_to_league.elo_rating as elo_rating
-        FROM player
-        INNER JOIN player_to_league ON player_to_league.player_id=player.id
-        WHERE player_to_league.league_id=$1 AND player.is_active=true
-        GROUP BY (player.id, player_to_league.elo_rating)
+        SELECT * FROM (
+          SELECT
+            player.id,
+            name,
+            color,
+            (SELECT count(id) FROM game WHERE winner_id=player.id AND league_id=$1) as games_won,
+            (SELECT count(id) FROM game WHERE loser_id=player.id AND league_id=$1) as games_lost,
+            (SELECT count(id) FROM game WHERE (winner_id = player.id OR loser_id=player.id) AND league_id=$1) as total_games,
+            player_to_league.elo_rating as elo_rating
+          FROM player
+          INNER JOIN player_to_league ON player_to_league.player_id=player.id
+          WHERE player_to_league.league_id=$1 AND player.is_active=true
+          GROUP BY (player.id, player_to_league.elo_rating)
+        ) as player_stats
+        WHERE player_stats.total_games > 0
         ORDER BY elo_rating DESC
       `, [league.id]),
       db.manyOrNone(`
