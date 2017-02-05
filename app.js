@@ -37,17 +37,27 @@ const db = pgp({
   password: process.env.PGPASSWORD
 })
 
-// Expose static files in /public
-app.use(express.static('public'))
+// Apply any migrations - then boot app
+require('./lib/migrate.js')(db)
+.then(() => {
+  // Expose static files in /public
+  app.use(express.static('public'))
 
-// Initialise routes
-require('./routes/index.js')(app, db)
-require('./routes/games.js')(app, db)
-require('./routes/rankings.js')(app, db)
-require('./routes/players.js')(app, db)
-require('./routes/leagues.js')(app, db)
-require('./routes/404.js')(app, db)
+  // Initialise routes
+  require('./routes/index.js')(app, db)
+  require('./routes/games.js')(app, db)
+  require('./routes/rankings.js')(app, db)
+  require('./routes/players.js')(app, db)
+  require('./routes/leagues.js')(app, db)
+  require('./routes/404.js')(app, db)
 
-app.listen(process.env.PORT || 8080, () => {
-  console.log(`Foosilator listening on port ${process.env.PORT || 8080}`)
+  // Listen
+  app.listen(process.env.PORT || 8080, () => {
+    console.log(`Foosilator listening on port ${process.env.PORT || 8080}`)
+  })
+})
+.catch((err) => {
+  console.log('Migrations Failed')
+  console.error(err)
+  process.exit(1)
 })
