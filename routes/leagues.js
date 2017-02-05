@@ -1,10 +1,12 @@
 module.exports = function (app, db) {
   // View list of all leagues
   app.get('/leagues', (req, res) => {
-    Promise.all([
-      db.manyOrNone('SELECT * FROM league WHERE is_active=true ORDER BY created_at DESC'),
-      db.manyOrNone('SELECT * FROM league WHERE is_active=false ORDER BY created_at DESC')
-    ])
+    db.task((task) => {
+      return task.batch([
+        task.manyOrNone('SELECT * FROM league WHERE is_active=true ORDER BY created_at DESC'),
+        task.manyOrNone('SELECT * FROM league WHERE is_active=false ORDER BY created_at DESC')
+      ])
+    })
     .then((data) => {
       res.render('leagues', {
         leagues: data[0],
@@ -38,25 +40,27 @@ module.exports = function (app, db) {
 
   // View an existing league
   app.get('/leagues/:id', (req, res) => {
-    Promise.all([
-      db.one('SELECT * FROM league WHERE id=$1', [req.params.id]),
-      db.manyOrNone(`
-        SELECT player.id, player.name, player.color, ptl.elo_rating as elo_rating
-        FROM player
-        INNER JOIN player_to_league ptl ON player.id=ptl.player_id
-        WHERE ptl.league_id=$1 AND player.is_active=true
-        ORDER BY ptl.elo_rating DESC
-      `, [req.params.id]),
-      db.manyOrNone(`
-        SELECT * FROM player WHERE player.id NOT IN (
-          SELECT player.id
+    db.task((task) => {
+      return task.batch([
+        task.one('SELECT * FROM league WHERE id=$1', [req.params.id]),
+        task.manyOrNone(`
+          SELECT player.id, player.name, player.color, ptl.elo_rating as elo_rating
           FROM player
           INNER JOIN player_to_league ptl ON player.id=ptl.player_id
-          WHERE ptl.league_id=$1
-        ) AND player.is_active=true
-      `, [req.params.id]),
-      db.manyOrNone('SELECT id, name, short_name FROM league WHERE is_active=true ORDER BY name ASC')
-    ])
+          WHERE ptl.league_id=$1 AND player.is_active=true
+          ORDER BY ptl.elo_rating DESC
+        `, [req.params.id]),
+        task.manyOrNone(`
+          SELECT * FROM player WHERE player.id NOT IN (
+            SELECT player.id
+            FROM player
+            INNER JOIN player_to_league ptl ON player.id=ptl.player_id
+            WHERE ptl.league_id=$1
+          ) AND player.is_active=true
+        `, [req.params.id]),
+        task.manyOrNone('SELECT id, name, short_name FROM league WHERE is_active=true ORDER BY name ASC')
+      ])
+    })
     .then((data) => {
       res.render('league', {
         league: data[0],
@@ -76,8 +80,13 @@ module.exports = function (app, db) {
   // Add an existing player to this league
   app.post('/leagues/:id/players', (req, res) => {
     // Insert with an average Elo rating for this league
-    db.none(
-      'INSERT INTO player_to_league(league_id, player_id, elo_rating) VALUES($1, $2, (SELECT COALESCE(ROUND(AVG(elo_rating)), 1000) FROM player_to_league WHERE league_id=$1))',
+    db.none(`
+        INSERT INTO player_to_league(league_id, player_id, elo_rating)
+        VALUES($1, $2, (
+          SELECT COALESCE(ROUND(AVG(elo_rating)), 1000)
+          FROM player_to_league WHERE league_id=$1)
+        )
+      `,
       [req.params.id, req.body.playerId]
     ).then(() => {
       res.redirect(`/leagues/${req.params.id}`)

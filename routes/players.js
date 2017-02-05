@@ -1,16 +1,18 @@
 module.exports = function (app, db) {
   // View list of all players
   app.get('/players', (req, res) => {
-    Promise.all([
-      db.manyOrNone('SELECT * FROM player WHERE is_active=true ORDER BY created_at DESC'),
-      db.manyOrNone('SELECT * FROM player WHERE is_active=false ORDER BY created_at DESC'),
-      db.manyOrNone('SELECT id, name, short_name FROM league WHERE is_active=true ORDER BY name ASC')
-    ])
-    .then((data) => {
-      res.render('players', {
-        players: data[0],
-        inactivePlayers: data[1],
-        activeLeagues: data[2]
+    db.task((task) => {
+      return task.batch([
+        task.manyOrNone('SELECT * FROM player WHERE is_active=true ORDER BY created_at DESC'),
+        task.manyOrNone('SELECT * FROM player WHERE is_active=false ORDER BY created_at DESC'),
+        task.manyOrNone('SELECT id, name, short_name FROM league WHERE is_active=true ORDER BY name ASC')
+      ])
+      .then((data) => {
+        res.render('players', {
+          players: data[0],
+          inactivePlayers: data[1],
+          activeLeagues: data[2]
+        })
       })
     })
     .catch((err) => {
@@ -38,10 +40,12 @@ module.exports = function (app, db) {
 
   // View an existing player
   app.get('/players/:id', (req, res) => {
-    Promise.all([
-      db.one('SELECT * FROM player WHERE id=$1', [req.params.id]),
-      db.manyOrNone('SELECT id, name, short_name FROM league WHERE is_active=true ORDER BY name ASC')
-    ])
+    db.task((task) => {
+      return task.batch([
+        task.one('SELECT * FROM player WHERE id=$1', [req.params.id]),
+        task.manyOrNone('SELECT id, name, short_name FROM league WHERE is_active=true ORDER BY name ASC')
+      ])
+    })
     .then((data) => {
       res.render('player', {
         player: data[0],
