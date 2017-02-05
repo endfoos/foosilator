@@ -8,11 +8,13 @@ require('envoodoo')()
 
 // ExpressJS Includes
 const express = require('express')
+const helmet = require('helmet')
 const bodyParser = require('body-parser')
 const hbs = require('hbs')
 
 // Setup Express
 const app = express()
+app.use(helmet())
 app.use(bodyParser.urlencoded({
   extended: true
 }))
@@ -36,6 +38,9 @@ const db = pgp({
   user: process.env.PGUSER,
   password: process.env.PGPASSWORD
 })
+
+// Initialise Sessions
+require('./lib/session.js')(app, db)
 
 // Apply any migrations - then boot app
 require('./lib/migrate.js')(db)
