@@ -70,4 +70,18 @@
   </table>
 </div>
 {{/if}}
+<section>
+  <h1>Reset League</h1>
+  <p>Warning - this will remove all played games and reset all players Elo rankings. <strong>There is no undo.</strong></p>
+  <br>
+  <p>Enter league's short name (from the URLs) to continue...</p>
+  <form method="post" action="/leagues/{{league.id}}/reset">
+    <div class="form-field no-label">
+      <input type="text" name="shortName">
+    </div>
+    <div class="form-field no-label">
+      <input type="submit" value="Reset League">
+    </div>
+  </form>
+</section>
 {{> footer}}

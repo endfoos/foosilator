@@ -174,6 +174,47 @@ module.exports = function (app, db) {
     })
   })
 
+  // Reset a league
+  app.post('/leagues/:id/reset', (req, res) => {
+    db.tx((transaction) => {
+      return transaction.one(`
+          SELECT id, short_name FROM league WHERE id=$1
+        `,
+        [req.params.id]
+      )
+      .then((league) => {
+        if (league.short_name !== req.body.shortName) {
+          return Promise.reject(new Error('Short Name did not match - league has not been reset!'))
+        } else {
+          return transaction.batch([
+            transaction.none(`
+                UPDATE player_to_league
+                SET elo_rating=1000
+                WHERE league_id=$1
+              `,
+              [league.id]
+            ),
+            transaction.none(`
+                DELETE FROM game
+                WHERE league_id=$1
+              `,
+              [league.id]
+            )
+          ])
+        }
+      })
+    })
+    .then(() => {
+      res.redirect(`/leagues`)
+    })
+    .catch((err) => {
+      res.render('error', {
+        error: err
+      })
+      console.error(err)
+    })
+  })
+
   // Switch to using a league
   app.get('/leagues/:id/switch', (req, res) => {
     db.one('SELECT id, short_name FROM league WHERE id=$1', [req.params.id])
