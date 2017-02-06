@@ -3,8 +3,18 @@ module.exports = function (app, db) {
   app.get('/leagues', (req, res) => {
     db.task((task) => {
       return task.batch([
-        task.manyOrNone('SELECT id, name, short_name, created_at FROM league WHERE is_active=true ORDER BY created_at DESC'),
-        task.manyOrNone('SELECT id, name, short_name, created_at FROM league WHERE is_active=false ORDER BY created_at DESC')
+        task.manyOrNone(`
+          SELECT id, name, short_name, max_score, created_at
+          FROM league
+          WHERE is_active=true
+          ORDER BY created_at DESC
+        `),
+        task.manyOrNone(`
+          SELECT id, name, short_name, max_score, created_at
+          FROM league
+          WHERE is_active=false
+          ORDER BY created_at DESC
+        `)
       ])
     })
     .then((data) => {
@@ -24,8 +34,8 @@ module.exports = function (app, db) {
 
   // Create a new league
   app.post('/leagues', (req, res) => {
-    const { name, shortName } = req.body
-    db.none('INSERT INTO league(name, short_name) VALUES($1, $2)', [name, shortName])
+    const { name, shortName, maxScore } = req.body
+    db.none('INSERT INTO league(name, short_name, max_score) VALUES($1, $2, $3)', [name, shortName, maxScore])
     .then(() => {
       // Make this the current league if one does not already exist
       if (!req.session.currentLeague) {
@@ -45,7 +55,7 @@ module.exports = function (app, db) {
   app.get('/leagues/:id', (req, res) => {
     db.task((task) => {
       return task.batch([
-        task.one('SELECT * FROM league WHERE id=$1', [req.params.id]),
+        task.one('SELECT id, name, short_name, max_score FROM league WHERE id=$1', [req.params.id]),
         task.manyOrNone(`
           SELECT player.id, player.name, player.color, ptl.elo_rating as elo_rating
           FROM player
@@ -120,8 +130,11 @@ module.exports = function (app, db) {
 
   // Modify an existing league
   app.post('/leagues/:id', (req, res) => {
-    const { name, shortName } = req.body
-    db.none('UPDATE league SET name=$1, short_name=$2 WHERE id=$3', [name, shortName, req.params.id])
+    const { name, shortName, maxScore } = req.body
+    db.none(
+      'UPDATE league SET name=$1, short_name=$2, max_score=$3 WHERE id=$4',
+      [name, shortName, maxScore, req.params.id]
+    )
     .then(() => {
       res.redirect('/leagues')
     })

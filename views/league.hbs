@@ -13,6 +13,12 @@
       <label for="league-short-name">Short Name (used in URLs):</label>
       <input type="text" name="shortName" value="{{league.short_name}}" id="league-short-name">
     </div>
+    <div class="form-field">
+      <label for="maxScoreField">Max Score</label>
+      <select name="maxScore" id="maxScoreField">
+        {{numberOptions 1 21 league.max_score}}
+      </select>
+    </div>
     <div class="form-field no-label">
       <input type="submit" value="Update League">
     </div>

@@ -2,7 +2,6 @@
 <section>
   <h1>Score a game</h1>
   <form action="games" method="post">
-    <input type="hidden" value="{{league.id}}" name="leagueId">
     <div class="form-field">
       <label for="winnerId">Winner</label>
       <select name="winnerId" id="winnerId">
@@ -14,16 +13,9 @@
     </div>
     <label class="hide-tablet-up">Score</label>
     <div class="form-field multiple-fields no-label">
-      <span class="field-text left">8 &nbsp;&nbsp;-</span>
+      <span class="field-text left">{{league.max_score}} &nbsp;&nbsp;-</span>
       <select name="loserScore">
-        <option value="0">0</option>
-        <option value="1">1</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-        <option value="4">4</option>
-        <option value="5">5</option>
-        <option value="6">6</option>
-        <option value="7">7</option>
+        {{numberOptions 0 league.max_score}}
       </select>
     </div>
     <div class="form-field">

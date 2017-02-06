@@ -7,7 +7,7 @@ module.exports = function (app, db) {
   app.get('/:league_short_name/games', (req, res) => {
     db.task((task) => {
       return task.one(
-        'SELECT id, name from league WHERE short_name=$1 AND is_active=true',
+        'SELECT id, max_score from league WHERE short_name=$1 AND is_active=true',
         [req.params.league_short_name]
       )
       .then((league) => {
@@ -56,35 +56,49 @@ module.exports = function (app, db) {
 
   // Add a new game result
   app.post('/:league_short_name/games', (req, res) => {
-    const { winnerId, loserId, loserScore, leagueId } = req.body
-    if (!winnerId || !loserId || !(loserScore >= 0) || !(loserScore < 8) || !leagueId || parseInt(winnerId, 10) === parseInt(loserId, 10)) {
+    const { winnerId, loserId, loserScore } = req.body
+    if (!winnerId || !loserId || !(loserScore >= 0) || parseInt(winnerId, 10) === parseInt(loserId, 10)) {
       res.render('error', {
         error: 'Invalid game - winner, loser and loser score are required. Winner and loser cannot be the same user.'
       })
     } else {
       db.tx((transaction) => {
-        return transaction.batch([
-          transaction.one(`
-              SELECT player.id, player_to_league.id as player_to_league_id, player_to_league.elo_rating as elo_rating
-              FROM player
-              INNER JOIN player_to_league ON player.id=player_to_league.player_id
-              WHERE player_to_league.league_id=$1
-                AND player.id=$2
-            `,
-            [leagueId, winnerId]
-          ),
-          transaction.one(`
-              SELECT player.id, player_to_league.id as player_to_league_id, player_to_league.elo_rating as elo_rating
-              FROM player
-              INNER JOIN player_to_league ON player.id=player_to_league.player_id
-              WHERE player_to_league.league_id=$1
-                AND player.id=$2`,
-            [leagueId, loserId]
-          )
-        ])
+        return transaction.one(`
+            SELECT id, max_score
+            FROM league
+            WHERE short_name=$1
+          `,
+          [req.params.league_short_name]
+        )
+        .then((league) => {
+          if (loserScore > league.max_score) {
+            return Promise.reject(new Error('Invalid loser score'))
+          }
+          return transaction.batch([
+            transaction.one(`
+                SELECT player.id, player_to_league.id as player_to_league_id, player_to_league.elo_rating as elo_rating
+                FROM player
+                INNER JOIN player_to_league ON player.id=player_to_league.player_id
+                WHERE player_to_league.league_id=$1
+                  AND player.id=$2
+              `,
+              [league.id, winnerId]
+            ),
+            transaction.one(`
+                SELECT player.id, player_to_league.id as player_to_league_id, player_to_league.elo_rating as elo_rating
+                FROM player
+                INNER JOIN player_to_league ON player.id=player_to_league.player_id
+                WHERE player_to_league.league_id=$1
+                  AND player.id=$2`,
+              [league.id, loserId]
+            ),
+            league
+          ])
+        })
         .then((data) => {
           const winner = data[0]
           const loser = data[1]
+          const league = data[2]
 
           // Update Elo scores
           const winnerNewRating = elo.ifWins(winner.elo_rating, loser.elo_rating)
@@ -114,12 +128,12 @@ module.exports = function (app, db) {
               VALUES($1, $2, $3, $4, $5, $6, $7)
               `, [
                 winnerId,
-                8,
+                league.max_score,
                 (winnerNewRating - winner.elo_rating),
                 loserId,
                 loserScore,
                 (loserNewRating - loser.elo_rating),
-                leagueId
+                league.id
               ]
             )
           ])
