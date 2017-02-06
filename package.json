@@ -9,7 +9,9 @@
     "envoodoo": "2.1.1",
     "express": "4.14.0",
     "hbs": "4.0.1",
-    "pg-promise": "5.5.0"
+    "pg-promise": "5.5.0",
+    "express-session": "1.15.0",
+    "helmet": "3.4.0"
   },
   "devDependencies": {
     "clean-css": "^3.4.23",
@@ -19,7 +21,7 @@
   },
   "scripts": {
     "start": "node app.js",
-    "start-dev": "nodemon -e hbs app.js",
+    "start-dev": "NODE_ENV=development nodemon -e js,hbs app.js",
     "test": "./node_modules/.bin/standard",
     "build-css": "node-sass --include-path scss scss/app.scss public/css/app.css",
     "minify-css": "cleancss -o public/css/app-min.css public/css/app.css",

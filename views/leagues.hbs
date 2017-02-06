@@ -10,6 +10,12 @@
       <label for="shortNameField">Short Name (used in urls)</label>
       <input type="text" name="shortName" id="shortNameField">
     </div>
+     <div class="form-field">
+      <label for="maxScoreField">Max Score</label>
+      <select name="maxScore" id="maxScoreField">
+        {{numberOptions 1 21 10}}
+      </select>
+    </div>
     <div class="form-field no-label">
       <input type="submit" value="Add League">
     </div>
@@ -24,6 +30,7 @@
           <th>ID</th>
           <th>Name</th>
           <th>Short Name</th>
+          <th>Max Score</th>
           <th>Date Created</th>
           <th></th>
         </tr>
@@ -34,6 +41,7 @@
             <td>{{this.id}}</td>
             <td>{{this.name}}</td>
             <td>{{this.short_name}}</td>
+            <td>{{this.max_score}}</td>
             <td>{{formatDate this.created_at}}</td>
             <td class="align-right">
               <a href="/leagues/{{this.id}}" class="margin-right-15">Update</a>
@@ -57,6 +65,7 @@
             <th>ID</th>
             <th>Name</th>
             <th>Short Name</th>
+            <th>Max Score</th>
             <th>Date Created</th>
             <th></th>
           </tr>
@@ -67,6 +76,7 @@
               <td>{{this.id}}</td>
               <td>{{this.name}}</td>
               <td>{{this.short_name}}</td>
+              <td>{{this.max_score}}</td>
               <td>{{formatDate this.created_at}}</td>
               <td class="align-right">
                 <a href="/leagues/{{this.id}}" class="margin-right-15">Update</a>
