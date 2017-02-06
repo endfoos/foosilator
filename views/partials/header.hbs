@@ -45,13 +45,13 @@
       <nav class="main-nav">
         <ul class="main-nav-menu">
           {{#if currentLeague}}
-            <li><a href="/{{currentLeague.short_name}}/games">Games played</a></li>
-            <li><a href="/{{currentLeague.short_name}}/rankings">Rankings</a></li>
+            <li><a {{#ifEq currentPage 'games'}}class="active"{{/ifEq}} href="/{{currentLeague.short_name}}/games">Games played</a></li>
+            <li><a {{#ifEq currentPage 'rankings'}}class="active"{{/ifEq}} href="/{{currentLeague.short_name}}/rankings">Rankings</a></li>
           {{/if}}
-          <li><a href="/players">Manage players</a></li>
-          <li><a href="/leagues">Manage leagues</a></li>
+          <li><a {{#ifEq currentPage 'players'}}class="active"{{/ifEq}} href="/players">Manage players</a></li>
+          <li><a {{#ifEq currentPage 'leagues'}}class="active"{{/ifEq}} href="/leagues">Manage leagues</a></li>
           {{#if currentLeague}}
-            <li><a href="/{{currentLeague.short_name}}/settings">League Settings</a></li>
+            <li><a {{#ifEq currentPage 'settings'}}class="active"{{/ifEq}} href="/{{currentLeague.short_name}}/settings">League Settings</a></li>
           {{/if}}
         </ul>
       </nav>

@@ -21,13 +21,8 @@ app.use(bodyParser.urlencoded({
 app.set('view engine', 'hbs')
 // Load partial HBS templates from /views/partials
 hbs.registerPartials(path.join(__dirname, '/views/partials'))
-const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-hbs.registerHelper('formatDate', function (d) {
-  // Add a leading 0 to minutes
-  let minutes = d.getMinutes()
-  minutes = minutes.toString().length >= 2 ? minutes : '0' + minutes
-  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()} ${d.getHours()}:${minutes}`
-})
+
+require('./lib/hbs-helpers.js')(hbs)
 
 // Postgresql Promise Library
 const pgp = require('pg-promise')()
