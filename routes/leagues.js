@@ -169,30 +169,30 @@ module.exports = function (app, db) {
       req.session.currentLeague = league.short_name
       // Redirect to requested page or to / if none request
       const requestedPage = req.query.page ? req.query.page.toLowerCase() : ''
-      switch(requestedPage) {
+      switch (requestedPage) {
         case 'games':
           res.redirect(`/${league.short_name}/games`)
-          break;
+          break
         case 'rankings':
           res.redirect(`/${league.short_name}/rankings`)
-          break;
+          break
         case 'players':
           if (req.query.id) {
             res.redirect(`/players/${req.query.id}`)
           } else {
             res.redirect('/players')
           }
-          break;
+          break
         case 'leagues':
           if (req.query.id) {
             res.redirect(`/leagues/${req.query.id}`)
           } else {
             res.redirect('/leagues')
           }
-          break;
+          break
         case 'settings':
           res.redirect(`/${league.short_name}/settings`)
-          break;
+          break
         default:
           res.redirect('/')
       }
