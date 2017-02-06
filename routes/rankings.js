@@ -7,8 +7,6 @@ module.exports = function (app, db) {
         [req.params.league_short_name]
       )
       .then((league) => {
-        // Set current league
-        req.session.currentLeague = req.params.league_short_name
         return task.batch([
           league,
           task.manyOrNone(`

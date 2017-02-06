@@ -44,6 +44,12 @@ require('./lib/migrate.js')(db)
   app.use(express.static('public'))
 
   // League Switching Menu
+  const setCurrentLeague = (req, res, next) => {
+    req.session.currentLeague = req.params.league_short_name
+    next();
+  }
+  app.use('/:league_short_name/games', setCurrentLeague)
+  app.use('/:league_short_name/rankings', setCurrentLeague)
   app.use((req, res, next) => {
     if (req.session.currentLeague) {
       db.task((task) => {
@@ -69,7 +75,7 @@ require('./lib/migrate.js')(db)
             id: league.id,
             name: league.name,
             short_name: league.short_name,
-            isCurrentLeague: data[0].short_name === league.short_name
+            isCurrentLeague: data[0] ? data[0].short_name === league.short_name : false
           }
         })
         res.locals.multipleLeagues = res.locals.activeLeagues.length > 1

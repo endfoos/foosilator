@@ -11,8 +11,6 @@ module.exports = function (app, db) {
         if (leagues.length <= 0) {
           res.redirect('/leagues')
         } else {
-          // Set current league and redirect
-          req.session.currentLeague = leagues[0].short_name
           res.redirect(`${leagues[0].short_name}/games`)
         }
       })
