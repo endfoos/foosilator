@@ -39,8 +39,11 @@ module.exports = function (app, db) {
 
   // View an existing player
   app.get('/players/:id', (req, res) => {
-    db.one('SELECT * FROM player WHERE id=$1', [req.params.id])
+    db.oneOrNone('SELECT * FROM player WHERE id=$1', [req.params.id])
     .then((player) => {
+      if (!player) {
+        return Promise.reject(new Error('404'))
+      }
       res.render('player', {
         player: player,
         currentPage: 'players',
@@ -48,10 +51,14 @@ module.exports = function (app, db) {
       })
     })
     .catch((err) => {
-      res.render('error', {
-        error: err
-      })
-      console.error(err)
+      if (err.message === '404') {
+        res.redirect('/404')
+      } else {
+        res.render('error', {
+          error: err
+        })
+        console.error(err)
+      }
     })
   })
 

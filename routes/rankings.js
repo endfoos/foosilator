@@ -2,11 +2,14 @@ module.exports = function (app, db) {
   // Rankings Landing Page
   app.get('/:league_short_name/rankings', (req, res) => {
     db.task((task) => {
-      return task.one(
+      return task.oneOrNone(
         'SELECT id, name from league WHERE short_name=$1',
         [req.params.league_short_name]
       )
       .then((league) => {
+        if (!league) {
+          return Promise.reject(new Error('404'))
+        }
         return task.batch([
           league,
           task.manyOrNone(`
@@ -135,10 +138,14 @@ module.exports = function (app, db) {
       })
     })
     .catch((err) => {
-      res.render('error', {
-        error: err
-      })
-      console.error(err)
+      if (err.message === '404') {
+        res.redirect('/404')
+      } else {
+        res.render('error', {
+          error: err
+        })
+        console.error(err)
+      }
     })
   })
 }

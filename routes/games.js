@@ -6,11 +6,14 @@ module.exports = function (app, db) {
    // Games played landing page
   app.get('/:league_short_name/games', (req, res) => {
     db.task((task) => {
-      return task.one(
+      return task.oneOrNone(
         'SELECT id, max_score from league WHERE short_name=$1 AND is_active=true',
         [req.params.league_short_name]
       )
       .then((league) => {
+        if (!league) {
+          return Promise.reject(new Error('404'))
+        }
         return task.batch([
           league,
           task.manyOrNone(`
@@ -45,10 +48,14 @@ module.exports = function (app, db) {
       })
     })
     .catch((err) => {
-      res.render('error', {
-        error: err
-      })
-      console.error(err)
+      if (err.message === '404') {
+        res.redirect('/404')
+      } else {
+        res.render('error', {
+          error: err
+        })
+        console.error(err)
+      }
     })
   })
 

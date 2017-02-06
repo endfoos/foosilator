@@ -54,24 +54,33 @@ module.exports = function (app, db) {
   // View an existing league
   app.get('/leagues/:id', (req, res) => {
     db.task((task) => {
-      return task.batch([
-        task.one('SELECT id, name, short_name, max_score FROM league WHERE id=$1', [req.params.id]),
-        task.manyOrNone(`
-          SELECT player.id, player.name, player.color, ptl.elo_rating as elo_rating
-          FROM player
-          INNER JOIN player_to_league ptl ON player.id=ptl.player_id
-          WHERE ptl.league_id=$1 AND player.is_active=true
-          ORDER BY ptl.elo_rating DESC
-        `, [req.params.id]),
-        task.manyOrNone(`
-          SELECT * FROM player WHERE player.id NOT IN (
-            SELECT player.id
+      return task.oneOrNone(
+        'SELECT id, name, short_name, max_score FROM league WHERE id=$1',
+        [req.params.id]
+      )
+      .then((league) => {
+        if (!league) {
+          return Promise.reject(new Error('404'))
+        }
+        return task.batch([
+          league,
+          task.manyOrNone(`
+            SELECT player.id, player.name, player.color, ptl.elo_rating as elo_rating
             FROM player
             INNER JOIN player_to_league ptl ON player.id=ptl.player_id
-            WHERE ptl.league_id=$1
-          ) AND player.is_active=true
-        `, [req.params.id])
-      ])
+            WHERE ptl.league_id=$1 AND player.is_active=true
+            ORDER BY ptl.elo_rating DESC
+          `, [req.params.id]),
+          task.manyOrNone(`
+            SELECT * FROM player WHERE player.id NOT IN (
+              SELECT player.id
+              FROM player
+              INNER JOIN player_to_league ptl ON player.id=ptl.player_id
+              WHERE ptl.league_id=$1
+            ) AND player.is_active=true
+          `, [req.params.id])
+        ])
+      })
     })
     .then((data) => {
       res.render('league', {
@@ -83,10 +92,14 @@ module.exports = function (app, db) {
       })
     })
     .catch((err) => {
-      res.render('error', {
-        error: err
-      })
-      console.error(err)
+      if (err.message === '404') {
+        res.redirect('/404')
+      } else {
+        res.render('error', {
+          error: err
+        })
+        console.error(err)
+      }
     })
   })
 
