@@ -21,7 +21,7 @@
   },
   "scripts": {
     "start": "node app.js",
-    "start-dev": "NODE_ENV=development nodemon -e hbs app.js",
+    "start-dev": "NODE_ENV=development nodemon -e js,hbs app.js",
     "test": "./node_modules/.bin/standard",
     "build-css": "node-sass --include-path scss scss/app.scss public/css/app.css",
     "minify-css": "cleancss -o public/css/app-min.css public/css/app.css",
