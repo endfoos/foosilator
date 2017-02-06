@@ -190,9 +190,6 @@ module.exports = function (app, db) {
             res.redirect('/leagues')
           }
           break
-        case 'settings':
-          res.redirect(`/${league.short_name}/settings`)
-          break
         default:
           res.redirect('/')
       }
