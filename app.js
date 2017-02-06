@@ -48,6 +48,44 @@ require('./lib/migrate.js')(db)
   // Expose static files in /public
   app.use(express.static('public'))
 
+  // League Switching Menu
+  app.use((req, res, next) => {
+    if (req.session.currentLeague) {
+      db.task((task) => {
+        return task.batch([
+          task.oneOrNone(`
+            SELECT id, name, short_name
+            FROM league
+            WHERE short_name=$1
+              AND is_active=true
+          `, [req.session.currentLeague]),
+          task.many(`
+            SELECT id, name, short_name
+            FROM league
+            WHERE is_active=true
+            ORDER BY name ASC
+          `)
+        ])
+      })
+      .then((data) => {
+        res.locals.currentLeague = data[0]
+        res.locals.activeLeagues = data[1].map((league) => {
+          return {
+            id: league.id,
+            name: league.name,
+            short_name: league.short_name,
+            isCurrentLeague: data[0].short_name === league.short_name
+          }
+        })
+        res.locals.multipleLeagues = res.locals.activeLeagues.length > 1
+        next()
+      })
+      .catch(next)
+    } else {
+      next()
+    }
+  })
+
   // Initialise routes
   require('./routes/index.js')(app, db)
   require('./routes/games.js')(app, db)

@@ -3,16 +3,15 @@ module.exports = function (app, db) {
   app.get('/leagues', (req, res) => {
     db.task((task) => {
       return task.batch([
-        task.manyOrNone('SELECT * FROM league WHERE is_active=true ORDER BY created_at DESC'),
-        task.manyOrNone('SELECT * FROM league WHERE is_active=false ORDER BY created_at DESC')
+        task.manyOrNone('SELECT id, name, short_name, created_at FROM league WHERE is_active=true ORDER BY created_at DESC'),
+        task.manyOrNone('SELECT id, name, short_name, created_at FROM league WHERE is_active=false ORDER BY created_at DESC')
       ])
     })
     .then((data) => {
       res.render('leagues', {
         leagues: data[0],
         inactiveLeagues: data[1],
-        // Include it again for the nav menu
-        activeLeagues: data[0]
+        currentPage: 'leagues'
       })
     })
     .catch((err) => {
@@ -28,6 +27,10 @@ module.exports = function (app, db) {
     const { name, shortName } = req.body
     db.none('INSERT INTO league(name, short_name) VALUES($1, $2)', [name, shortName])
     .then(() => {
+      // Make this the current league if one does not already exist
+      if (!req.session.currentLeague) {
+        req.session.currentLeague = shortName
+      }
       res.redirect('/leagues')
     })
     .catch((err) => {
@@ -57,8 +60,7 @@ module.exports = function (app, db) {
             INNER JOIN player_to_league ptl ON player.id=ptl.player_id
             WHERE ptl.league_id=$1
           ) AND player.is_active=true
-        `, [req.params.id]),
-        task.manyOrNone('SELECT id, name, short_name FROM league WHERE is_active=true ORDER BY name ASC')
+        `, [req.params.id])
       ])
     })
     .then((data) => {
@@ -66,7 +68,8 @@ module.exports = function (app, db) {
         league: data[0],
         currentPlayers: data[1],
         unaffiliatedPlayers: data[2],
-        activeLeagues: data[3]
+        currentPage: 'leagues',
+        currentId: req.params.id
       })
     })
     .catch((err) => {
@@ -149,6 +152,50 @@ module.exports = function (app, db) {
     db.none('UPDATE league SET is_active=true WHERE id=$1', [req.params.id])
     .then(() => {
       res.redirect('/leagues')
+    })
+    .catch((err) => {
+      res.render('error', {
+        error: err
+      })
+      console.error(err)
+    })
+  })
+
+  // Switch to using a league
+  app.get('/leagues/:id/switch', (req, res) => {
+    db.one('SELECT id, short_name FROM league WHERE id=$1', [req.params.id])
+    .then((league) => {
+      // Set current league
+      req.session.currentLeague = league.short_name
+      // Redirect to requested page or to / if none request
+      const requestedPage = req.query.page ? req.query.page.toLowerCase() : ''
+      switch(requestedPage) {
+        case 'games':
+          res.redirect(`/${league.short_name}/games`)
+          break;
+        case 'rankings':
+          res.redirect(`/${league.short_name}/rankings`)
+          break;
+        case 'players':
+          if (req.query.id) {
+            res.redirect(`/players/${req.query.id}`)
+          } else {
+            res.redirect('/players')
+          }
+          break;
+        case 'leagues':
+          if (req.query.id) {
+            res.redirect(`/leagues/${req.query.id}`)
+          } else {
+            res.redirect('/leagues')
+          }
+          break;
+        case 'settings':
+          res.redirect(`/${league.short_name}/settings`)
+          break;
+        default:
+          res.redirect('/')
+      }
     })
     .catch((err) => {
       res.render('error', {

@@ -11,6 +11,8 @@ module.exports = function (app, db) {
         [req.params.league_short_name]
       )
       .then((league) => {
+        // Set current league
+        req.session.currentLeague = req.params.league_short_name
         return task.batch([
           league,
           task.manyOrNone(`
@@ -27,12 +29,7 @@ module.exports = function (app, db) {
             WHERE league_id=$1
             ORDER BY game.created_at DESC
             LIMIT 15
-          `, [league.id]),
-          task.manyOrNone(`
-            SELECT id, name, short_name
-            FROM league WHERE is_active=true
-            ORDER BY name ASC
-          `)
+          `, [league.id])
         ])
       })
       .then((data) => {
@@ -40,20 +37,11 @@ module.exports = function (app, db) {
         if (data[1].length <= 0) {
           res.redirect(`/leagues/${data[0].id}`)
         } else {
-          const activeLeagues = data[3].map((league) => {
-            return {
-              name: league.name,
-              short_name: league.short_name,
-              isCurrentLeague: league.short_name === req.params.league_short_name
-            }
-          })
-
           res.render('games', {
             league: data[0],
             players: data[1],
             latestGames: data[2],
-            currentLeague: req.params.league_short_name,
-            activeLeagues: activeLeagues
+            currentPage: 'games'
           })
         }
       })

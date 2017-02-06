@@ -4,14 +4,13 @@ module.exports = function (app, db) {
     db.task((task) => {
       return task.batch([
         task.manyOrNone('SELECT * FROM player WHERE is_active=true ORDER BY created_at DESC'),
-        task.manyOrNone('SELECT * FROM player WHERE is_active=false ORDER BY created_at DESC'),
-        task.manyOrNone('SELECT id, name, short_name FROM league WHERE is_active=true ORDER BY name ASC')
+        task.manyOrNone('SELECT * FROM player WHERE is_active=false ORDER BY created_at DESC')
       ])
       .then((data) => {
         res.render('players', {
           players: data[0],
           inactivePlayers: data[1],
-          activeLeagues: data[2]
+          currentPage: 'players'
         })
       })
     })
@@ -40,16 +39,12 @@ module.exports = function (app, db) {
 
   // View an existing player
   app.get('/players/:id', (req, res) => {
-    db.task((task) => {
-      return task.batch([
-        task.one('SELECT * FROM player WHERE id=$1', [req.params.id]),
-        task.manyOrNone('SELECT id, name, short_name FROM league WHERE is_active=true ORDER BY name ASC')
-      ])
-    })
-    .then((data) => {
+    db.one('SELECT * FROM player WHERE id=$1', [req.params.id])
+    .then((player) => {
       res.render('player', {
-        player: data[0],
-        activeLeagues: data[1]
+        player: player,
+        currentPage: 'players',
+        currentId: req.params.id
       })
     })
     .catch((err) => {

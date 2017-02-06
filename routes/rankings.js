@@ -7,6 +7,8 @@ module.exports = function (app, db) {
         [req.params.league_short_name]
       )
       .then((league) => {
+        // Set current league
+        req.session.currentLeague = req.params.league_short_name
         return task.batch([
           league,
           task.manyOrNone(`
@@ -44,21 +46,13 @@ module.exports = function (app, db) {
             ) elo_change ON true
             WHERE player.is_active=true
             ORDER BY player.id
-          `, [league.id]),
-          task.manyOrNone('SELECT id, name, short_name FROM league WHERE is_active=true ORDER BY name ASC')
+          `, [league.id])
         ])
       })
       .then((data) => {
         const league = data[0]
         const players = data[1]
         const lastTengames = data[2]
-        const activeLeagues = data[3].map((league) => {
-          return {
-            name: league.name,
-            short_name: league.short_name,
-            isCurrentLeague: league.short_name === req.params.league_short_name
-          }
-        })
 
         const gamesByPlayerId = {}
         lastTengames.forEach((game) => {
@@ -137,10 +131,8 @@ module.exports = function (app, db) {
           league: league,
           players: players,
           playerEloSeries: JSON.stringify(playerEloSeries),
-          currentLeague: req.params.league_short_name,
-          currentPage: '/rankings',
-          activeLeagues: activeLeagues,
-          gaugeData: JSON.stringify(gaugeData)
+          gaugeData: JSON.stringify(gaugeData),
+          currentPage: 'rankings'
         })
       })
     })

@@ -28,27 +28,31 @@
     <div class="navigation">
       {{#if currentLeague}}
         <div class="name-with-edit-link margin-btm-20">
-          <h2 class="name">{{league.name}}</h2>
+          <h2 class="name">{{currentLeague.name}}</h2>
           <div id="league-select-wrap" class="js-hidden-control">
             <select id="league-select" class="js-navigate-on-change">
               {{#unless currentPage}}<option disabled selected value></option>{{/unless}}
               {{#each activeLeagues}}
-                <option value="/{{this.short_name}}{{#if ../currentPage}}{{../currentPage}}{{else}}/games{{/if}}" {{#if this.isCurrentLeague}}disabled selected{{/if}}>{{this.name}}</option>
+                <option value="/leagues/{{this.id}}/switch?page={{../currentPage}}{{#if ../currentId}}&id={{../currentId}}{{/if}}" {{#if this.isCurrentLeague}}disabled selected{{/if}}>{{this.name}}</option>
               {{/each}}
             </select>
           </div>
-          <a href="#" class="link js-activate-control" data-target="#league-select-wrap">Switch league</a>
+          {{#if multipleLeagues}}
+            <a href="#" class="link js-activate-control" data-target="#league-select-wrap">Switch league</a>
+          {{/if}}
         </div>
       {{/if}}
       <nav class="main-nav">
         <ul class="main-nav-menu">
           {{#if currentLeague}}
-            <li><a href="/{{currentLeague}}/games">Games played</a></li>
-            <li><a href="/{{currentLeague}}/rankings">Rankings</a></li>
+            <li><a href="/{{currentLeague.short_name}}/games">Games played</a></li>
+            <li><a href="/{{currentLeague.short_name}}/rankings">Rankings</a></li>
           {{/if}}
           <li><a href="/players">Manage players</a></li>
           <li><a href="/leagues">Manage leagues</a></li>
-          <li><a href="/settings">Settings</a></li>
+          {{#if currentLeague}}
+            <li><a href="/{{currentLeague.short_name}}/settings">League Settings</a></li>
+          {{/if}}
         </ul>
       </nav>
     </div>
