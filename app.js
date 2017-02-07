@@ -46,10 +46,11 @@ require('./lib/migrate.js')(db)
   // League Switching Menu
   const setCurrentLeague = (req, res, next) => {
     req.session.currentLeague = req.params.league_short_name
-    next();
+    next()
   }
   app.use('/:league_short_name/games', setCurrentLeague)
   app.use('/:league_short_name/rankings', setCurrentLeague)
+  app.use('/:league_short_name/players', setCurrentLeague)
   app.use((req, res, next) => {
     if (req.session.currentLeague) {
       db.task((task) => {
@@ -60,7 +61,7 @@ require('./lib/migrate.js')(db)
             WHERE short_name=$1
               AND is_active=true
           `, [req.session.currentLeague]),
-          task.many(`
+          task.any(`
             SELECT id, name, short_name
             FROM league
             WHERE is_active=true

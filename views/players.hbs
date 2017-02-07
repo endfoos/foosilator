@@ -1,7 +1,7 @@
 {{> header}}
 <section>
   <h1>Create Player</h1>
-  <form method="post" action="/players">
+  <form method="post" action="/{{currentLeague.short_name}}/players">
     <div class="form-field">
       <label for="nameField">Name</label>
       <input type="text" name="name" id="nameField">
@@ -36,8 +36,8 @@
             <td><span class="player-color" style="background-color: #{{this.color}}"></span>#{{this.color}}</td>
             <td>{{formatDate this.created_at}}</td>
             <td class="align-right">
-              <a href="/players/{{this.id}}">Update</a>
-              <form method="post" action="/players/{{this.id}}/deactivate" class="table-form margin-left-15">
+              <a href="/{{../currentLeague.short_name}}/players/{{this.id}}">Update</a>
+              <form method="post" action="/{{../currentLeague.short_name}}/players/{{this.id}}/deactivate" class="table-form margin-left-15">
                 <input type="submit" value="Deactivate">
               </form>
             </td>
@@ -69,8 +69,8 @@
             <td><span class="player-color" style="background-color: #{{this.color}}"></span>#{{this.color}}</td>
             <td>{{formatDate this.created_at}}</td>
             <td class="align-right">
-              <a href="/players/{{this.id}}" class="margin-right-15">Update</a>
-              <form method="post" action="/players/{{this.id}}/reactivate" class="table-form">
+              <a href="/{{../currentLeague.short_name}}/players/{{this.id}}" class="margin-right-15">Update</a>
+              <form method="post" action="/{{../currentLeague.short_name}}/players/{{this.id}}/reactivate" class="table-form">
                 <input type="submit" value="Activate">
               </form>
             </td>

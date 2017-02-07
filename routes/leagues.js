@@ -53,40 +53,16 @@ module.exports = function (app, db) {
 
   // View an existing league
   app.get('/leagues/:id', (req, res) => {
-    db.task((task) => {
-      return task.oneOrNone(
-        'SELECT id, name, short_name, max_score FROM league WHERE id=$1',
-        [req.params.id]
-      )
-      .then((league) => {
-        if (!league) {
-          return Promise.reject(new Error('404'))
-        }
-        return task.batch([
-          league,
-          task.manyOrNone(`
-            SELECT player.id, player.name, player.color, ptl.elo_rating as elo_rating
-            FROM player
-            INNER JOIN player_to_league ptl ON player.id=ptl.player_id
-            WHERE ptl.league_id=$1 AND player.is_active=true
-            ORDER BY ptl.elo_rating DESC
-          `, [req.params.id]),
-          task.manyOrNone(`
-            SELECT * FROM player WHERE player.id NOT IN (
-              SELECT player.id
-              FROM player
-              INNER JOIN player_to_league ptl ON player.id=ptl.player_id
-              WHERE ptl.league_id=$1
-            ) AND player.is_active=true
-          `, [req.params.id])
-        ])
-      })
-    })
-    .then((data) => {
+    db.oneOrNone(
+      'SELECT id, name, short_name, max_score FROM league WHERE id=$1',
+      [req.params.id]
+    )
+    .then((league) => {
+      if (!league) {
+        return Promise.reject(new Error('404'))
+      }
       res.render('league', {
-        league: data[0],
-        currentPlayers: data[1],
-        unaffiliatedPlayers: data[2],
+        league: league,
         currentPage: 'leagues',
         currentId: req.params.id
       })
@@ -100,44 +76,6 @@ module.exports = function (app, db) {
         })
         console.error(err)
       }
-    })
-  })
-
-  // Add an existing player to this league
-  app.post('/leagues/:id/players', (req, res) => {
-    // Insert with an average Elo rating for this league
-    db.none(`
-        INSERT INTO player_to_league(league_id, player_id, elo_rating)
-        VALUES($1, $2, (
-          SELECT COALESCE(ROUND(AVG(elo_rating)), 1000)
-          FROM player_to_league WHERE league_id=$1)
-        )
-      `,
-      [req.params.id, req.body.playerId]
-    ).then(() => {
-      res.redirect(`/leagues/${req.params.id}`)
-    })
-    .catch((err) => {
-      res.render('error', {
-        error: err
-      })
-      console.error(err)
-    })
-  })
-
-  // Remove a player from this league
-  app.post('/leagues/:leagueId/players/:playerId/delete', (req, res) => {
-    db.none(
-      'DELETE FROM player_to_league WHERE league_id=$1 AND player_id=$2',
-      [req.params.leagueId, req.params.playerId]
-    ).then(() => {
-      res.redirect(`/leagues/${req.params.leagueId}`)
-    })
-    .catch((err) => {
-      res.render('error', {
-        error: err
-      })
-      console.error(err)
     })
   })
 
@@ -201,7 +139,7 @@ module.exports = function (app, db) {
         } else {
           return transaction.batch([
             transaction.none(`
-                UPDATE player_to_league
+                UPDATE league_player
                 SET elo_rating=1000
                 WHERE league_id=$1
               `,
@@ -245,9 +183,9 @@ module.exports = function (app, db) {
           break
         case 'players':
           if (req.query.id) {
-            res.redirect(`/players/${req.query.id}`)
+            res.redirect(`/${league.short_name}/players/${req.query.id}`)
           } else {
-            res.redirect('/players')
+            res.redirect(`/${league.short_name}/players`)
           }
           break
         case 'leagues':

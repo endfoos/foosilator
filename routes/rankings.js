@@ -15,38 +15,36 @@ module.exports = function (app, db) {
           task.manyOrNone(`
             SELECT * FROM (
               SELECT
-                player.id,
+                id,
                 name,
                 color,
-                (SELECT count(id) FROM game WHERE winner_id=player.id AND league_id=$1) as games_won,
-                (SELECT count(id) FROM game WHERE loser_id=player.id AND league_id=$1) as games_lost,
-                (SELECT count(id) FROM game WHERE (winner_id = player.id OR loser_id=player.id) AND league_id=$1) as total_games,
-                player_to_league.elo_rating as elo_rating
-              FROM player
-              INNER JOIN player_to_league ON player_to_league.player_id=player.id
-              WHERE player_to_league.league_id=$1 AND player.is_active=true
-              GROUP BY (player.id, player_to_league.elo_rating)
+                (SELECT count(id) FROM game WHERE winner_id=league_player.id AND league_id=$1) as games_won,
+                (SELECT count(id) FROM game WHERE loser_id=league_player.id AND league_id=$1) as games_lost,
+                (SELECT count(id) FROM game WHERE (winner_id = league_player.id OR loser_id=league_player.id) AND league_id=$1) as total_games,
+                elo_rating
+              FROM league_player
+              WHERE league_id=$1 AND is_active=true
+              GROUP BY (id, elo_rating)
             ) as player_stats
             WHERE player_stats.total_games > 0
             ORDER BY elo_rating DESC
           `, [league.id]),
           task.manyOrNone(`
-            SELECT player.id AS player_id, elo_change.created_at, elo_change.elo_change
-            FROM PLAYER
+            SELECT league_player.id AS player_id, elo_change.created_at, elo_change.elo_change
+            FROM league_player
             JOIN LATERAL (
               SELECT CASE
-                WHEN game.winner_id=player.id THEN game.winner_elo_change
-                WHEN game.loser_id=player.id THEN game.loser_elo_change
+                WHEN game.winner_id=league_player.id THEN game.winner_elo_change
+                WHEN game.loser_id=league_player.id THEN game.loser_elo_change
               END as elo_change,
               created_at
               FROM game
-              WHERE (game.winner_id=player.id OR game.loser_id=player.id)
+              WHERE (game.winner_id=league_player.id OR game.loser_id=league_player.id)
                 AND game.league_id=$1
                 AND created_at > CURRENT_DATE - INTERVAL '14 days'
               ORDER BY game.created_at DESC
             ) elo_change ON true
-            WHERE player.is_active=true
-            ORDER BY player.id
+            WHERE league_player.is_active=true
           `, [league.id])
         ])
       })

@@ -6,7 +6,7 @@ module.exports = function (app, db) {
     } else {
       // Redirect to first league if one exists
       // otherwise redirect to league management
-      db.manyOrNone('SELECT id, short_name FROM league ORDER BY created_at ASC LIMIT 1')
+      db.manyOrNone('SELECT id, short_name FROM league WHERE is_active=true ORDER BY created_at ASC LIMIT 1')
       .then((leagues) => {
         if (leagues.length <= 0) {
           res.redirect('/leagues')
