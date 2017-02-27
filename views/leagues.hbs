@@ -10,11 +10,15 @@
       <label for="shortNameField">Short Name (used in urls)</label>
       <input type="text" name="shortName" id="shortNameField">
     </div>
-     <div class="form-field">
+    <div class="form-field">
       <label for="maxScoreField">Max Score</label>
       <select name="maxScore" id="maxScoreField">
         {{numberOptions 1 21 10}}
       </select>
+    </div>
+    <div class="form-field">
+      <label for="leaguePasswordField">League Password</label>
+      <input type="password" name="leaguePassword" id="leaguePasswordField">
     </div>
     <div class="form-field no-label">
       <input type="submit" value="Add League">

@@ -1,0 +1,16 @@
+{{> header}}
+<section>
+  <h1>Enter League Password for {{league.name}}</h1>
+  <form action="/auth/leagueAccess" method="post">
+    <input type="hidden" name="leagueId" value="{{league.id}}">
+    <input type="hidden" name="page" value="{{page}}">
+    <div class="form-field">
+      <label for="leaguePassword">Password</label>
+      <input type="password" name="leaguePassword" id="leaguePassword">
+    </div>
+    <div class="form-field no-label">
+      <input type="submit" value="Go">
+    </div>
+  </form>
+</section>
+{{> footer}}

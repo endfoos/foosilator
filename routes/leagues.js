@@ -1,3 +1,5 @@
+const bcrypt = require('bcryptjs')
+
 module.exports = function (app, db) {
   // View list of all leagues
   app.get('/leagues', (req, res) => {
@@ -34,8 +36,27 @@ module.exports = function (app, db) {
 
   // Create a new league
   app.post('/leagues', (req, res) => {
-    const { name, shortName, maxScore } = req.body
-    db.none('INSERT INTO league(name, short_name, max_score) VALUES($1, $2, $3)', [name, shortName, maxScore])
+    const { name, shortName, maxScore, leaguePassword } = req.body
+    new Promise((resolve, reject) => {
+      if (leaguePassword) {
+        bcrypt.hash(leaguePassword, parseInt(process.env.BCRYPT_SALT_ROUNDS, 10))
+        .then((leaguePasswordHash) => {
+          return db.none(
+            'INSERT INTO league(name, short_name, max_score, password) VALUES($1, $2, $3, $4)',
+            [name, shortName, maxScore, leaguePasswordHash]
+          )
+        })
+        .then(resolve)
+        .catch(reject)
+      } else {
+        db.none(
+          'INSERT INTO league(name, short_name, max_score) VALUES($1, $2, $3)',
+          [name, shortName, maxScore]
+        )
+        .then(resolve)
+        .catch(reject)
+      }
+    })
     .then(() => {
       // Make this the current league if one does not already exist
       if (!req.session.currentLeague) {
@@ -53,8 +74,11 @@ module.exports = function (app, db) {
 
   // View an existing league
   app.get('/leagues/:id', (req, res) => {
-    db.oneOrNone(
-      'SELECT id, name, short_name, max_score FROM league WHERE id=$1',
+    db.oneOrNone(`
+        SELECT id, name, short_name, max_score,
+          CASE WHEN password IS NULL THEN False ELSE True END has_password
+        FROM league WHERE id=$1
+      `,
       [req.params.id]
     )
     .then((league) => {
@@ -116,6 +140,62 @@ module.exports = function (app, db) {
     db.none('UPDATE league SET is_active=true WHERE id=$1', [req.params.id])
     .then(() => {
       res.redirect('/leagues')
+    })
+    .catch((err) => {
+      res.render('error', {
+        error: err
+      })
+      console.error(err)
+    })
+  })
+
+  // Update a league's password
+  app.post('/leagues/:id/password', (req, res) => {
+    const { currentPassword, removePassword, newPassword, newPasswordConfirm } = req.body
+    db.task((task) => {
+      return task.one(`
+          SELECT id, password FROM league WHERE id=$1
+        `,
+        [req.params.id]
+      )
+      .then((league) => {
+        if (league.password) {
+          return bcrypt.compare(currentPassword, league.password)
+        } else {
+          return Promise.resolve(true)
+        }
+      })
+      .then((result) => {
+        if (result !== true) {
+          return Promise.reject(new Error('Current Password was incorrect'))
+        }
+
+        if (removePassword === 'true') {
+          return task.none(`
+            UPDATE league SET password = NULL WHERE id=$1
+            `,
+            [req.params.id]
+          )
+        } else {
+          if (newPassword !== newPasswordConfirm) {
+            return Promise.reject(new Error('New Password does not match Confirm Field'))
+          } else if (!newPassword) {
+            return Promise.reject(new Error('League Password cannot be blank'))
+          } else {
+            return bcrypt.hash(newPassword, parseInt(process.env.BCRYPT_SALT_ROUNDS, 10))
+            .then((leaguePasswordHash) => {
+              return task.none(`
+                  UPDATE league SET password=$1 WHERE id=$2
+                `,
+                [leaguePasswordHash, req.params.id]
+              )
+            })
+          }
+        }
+      })
+    })
+    .then(() => {
+      res.redirect(`/leagues`)
     })
     .catch((err) => {
       res.render('error', {
