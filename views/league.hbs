@@ -25,6 +25,32 @@
   </form>
 </section>
 <section>
+  <h1>{{#if league.has_password}}Change or Remove Password{{else}}Add Password{{/if}}</h1>
+  <form method="post" action="/leagues/{{league.id}}/password">
+    {{#if league.has_password}}
+      <div class="form-field">
+        <label for="currentPasswordField">Current Password</label>
+        <input type="password" name="currentPassword" id="currentPasswordField">
+      </div>
+      <div class="form-field">
+        <input type="radio" name="removePassword" value="true" id="removePasswordTrueField"><label for="removePasswordTrueField">Remove Password</label>
+        <input type="radio" name="removePassword" value="false" id="removePasswordFalseField" checked><label for="removePasswordFalseField">Change Password</label>
+      </div>
+    {{/if}}
+    <div class="form-field">
+      <label for="newPasswordField">New Password</label>
+      <input type="password" name="newPassword" id="newPasswordField">
+    </div>
+    <div class="form-field">
+      <label for="newPasswordConfirmField">Confirm New Password</label>
+      <input type="password" name="newPasswordConfirm" id="newPasswordConfirmField">
+    </div>
+    <div class="form-field no-label">
+      <input type="submit" value="{{#if league.has_password}}Update{{else}}Add{{/if}} Password">
+    </div>
+  </form>
+</section>
+<section>
   <h1>Reset League</h1>
   <p>Warning - this will remove all played games and reset all players Elo rankings. <strong>There is no undo.</strong></p>
   <br>

@@ -90,6 +90,7 @@ require('./lib/migrate.js')(db)
 
   // Initialise routes
   require('./routes/index.js')(app, db)
+  require('./routes/auth.js')(app, db)
   require('./routes/games.js')(app, db)
   require('./routes/rankings.js')(app, db)
   require('./routes/players.js')(app, db)

@@ -1,0 +1,2 @@
+ALTER TABLE league
+  ADD COLUMN password VARCHAR(60);
