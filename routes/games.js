@@ -17,17 +17,17 @@ module.exports = function (app, db) {
         return task.batch([
           league,
           task.manyOrNone(`
-            SELECT player.id, player.name
-            FROM player
-            INNER JOIN player_to_league ptl ON player.id=ptl.player_id
-            WHERE player.is_active=true AND ptl.league_id=$1
+            SELECT id, name
+            FROM league_player
+            WHERE is_active=true AND league_id=$1
+            ORDER BY name ASC
           `, [league.id]),
           task.manyOrNone(`
             SELECT game.id, w.name as winner_name, winner_score, l.name as loser_name, loser_score
             FROM game
-            LEFT JOIN player w ON winner_id=w.id
-            LEFT JOIN player l ON loser_id=l.id
-            WHERE league_id=$1
+            LEFT JOIN league_player w ON winner_id=w.id
+            LEFT JOIN league_player l ON loser_id=l.id
+            WHERE game.league_id=$1
             ORDER BY game.created_at DESC
             LIMIT 15
           `, [league.id])
@@ -76,25 +76,25 @@ module.exports = function (app, db) {
           [req.params.league_short_name]
         )
         .then((league) => {
+          if (!league) {
+            return Promise.reject(new Error('404'))
+          }
           if (loserScore > league.max_score) {
             return Promise.reject(new Error('Invalid loser score'))
           }
           return transaction.batch([
             transaction.one(`
-                SELECT player.id, player_to_league.id as player_to_league_id, player_to_league.elo_rating as elo_rating
-                FROM player
-                INNER JOIN player_to_league ON player.id=player_to_league.player_id
-                WHERE player_to_league.league_id=$1
-                  AND player.id=$2
+                SELECT id, elo_rating
+                FROM league_player
+                WHERE league_id=$1 AND id=$2
               `,
               [league.id, winnerId]
             ),
             transaction.one(`
-                SELECT player.id, player_to_league.id as player_to_league_id, player_to_league.elo_rating as elo_rating
-                FROM player
-                INNER JOIN player_to_league ON player.id=player_to_league.player_id
-                WHERE player_to_league.league_id=$1
-                  AND player.id=$2`,
+                SELECT id, elo_rating
+                FROM league_player
+                WHERE league_id=$1 AND id=$2
+              `,
               [league.id, loserId]
             ),
             league
@@ -112,12 +112,12 @@ module.exports = function (app, db) {
           return transaction.batch([
             // Update Elo score for this league
             transaction.none(
-              'UPDATE player_to_league SET elo_rating=$1 WHERE player_to_league.id=$2',
-              [winnerNewRating, winner.player_to_league_id]
+              'UPDATE league_player SET elo_rating=$1 WHERE id=$2',
+              [winnerNewRating, winner.id]
             ),
             transaction.none(
-              'UPDATE player_to_league SET elo_rating=$1 WHERE player_to_league.id=$2',
-              [loserNewRating, loser.player_to_league_id]
+              'UPDATE league_player SET elo_rating=$1 WHERE id=$2',
+              [loserNewRating, loser.id]
             ),
             // Store game result and elo change
             transaction.none(`
@@ -132,10 +132,10 @@ module.exports = function (app, db) {
               )
               VALUES($1, $2, $3, $4, $5, $6, $7)
               `, [
-                winnerId,
+                winner.id,
                 league.max_score,
                 (winnerNewRating - winner.elo_rating),
-                loserId,
+                loser.id,
                 loserScore,
                 (loserNewRating - loser.elo_rating),
                 league.id
@@ -148,10 +148,14 @@ module.exports = function (app, db) {
         res.redirect(`/${req.params.league_short_name}/games`)
       })
       .catch((err) => {
-        res.render('error', {
-          error: err
-        })
-        console.error(err)
+        if (err.message === '404') {
+          res.redirect('/404')
+        } else {
+          res.render('error', {
+            error: err
+          })
+          console.error(err)
+        }
       })
     }
   })
@@ -160,8 +164,19 @@ module.exports = function (app, db) {
   app.post('/:league_short_name/games/:id/delete', (req, res) => {
     db.tx((transaction) => {
       // Check target game exists
-      return transaction.one('SELECT id, league_id FROM game WHERE id=$1', [req.params.id])
-      .then((targetGame) => {
+      return transaction.batch([
+        transaction.oneOrNone(
+          'SELECT id, short_name FROM league WHERE short_name=$1',
+          [req.params.league_short_name]
+        ),
+        transaction.one('SELECT id, league_id FROM game WHERE id=$1', [req.params.id])
+      ])
+      .then((data) => {
+        const league = data[0]
+        if (!league) {
+          return Promise.reject(new Error('404'))
+        }
+        const targetGame = data[1]
         // Fetch latest game from this games league
         return transaction.one(`
             SELECT id, league_id, winner_id, winner_elo_change, loser_id, loser_elo_change, created_at
@@ -183,16 +198,14 @@ module.exports = function (app, db) {
         // Update player Elo Ratings to revert score changes
         return transaction.batch([
           transaction.none(`
-              UPDATE player_to_league SET elo_rating=(elo_rating - $1)
-              WHERE player_to_league.player_id=$2
-                AND player_to_league.league_id=$3
+              UPDATE league_player SET elo_rating=(elo_rating - $1)
+              WHERE league_player.id=$2 AND league_player.league_id=$3
             `,
             [gameForDeletion.winner_elo_change, gameForDeletion.winner_id, gameForDeletion.league_id]
           ),
           transaction.none(`
-              UPDATE player_to_league SET elo_rating=(elo_rating - $1)
-              WHERE player_to_league.player_id=$2
-                AND player_to_league.league_id=$3
+              UPDATE league_player SET elo_rating=(elo_rating - $1)
+              WHERE league_player.id=$2 AND league_player.league_id=$3
             `,
             [gameForDeletion.loser_elo_change, gameForDeletion.loser_id, gameForDeletion.league_id]
           )
@@ -205,10 +218,14 @@ module.exports = function (app, db) {
     }).then(() => {
       res.redirect(`/${req.params.league_short_name}/games`)
     }).catch((err) => {
-      res.render('error', {
-        error: err
-      })
-      console.error(err)
+      if (err.message === '404') {
+        res.redirect('/404')
+      } else {
+        res.render('error', {
+          error: err
+        })
+        console.error(err)
+      }
     })
   })
 }

@@ -25,52 +25,6 @@
   </form>
 </section>
 <section>
-  <h1>Add player to {{league.name}}</h1>
-  <form method="post" action="/leagues/{{league.id}}/players">
-    <div class="form-field">
-      <label for="player-select">Player name</label>
-      <select name="playerId" id="player-select">
-        <option disabled selected value></option>
-        {{#each unaffiliatedPlayers}}
-          <option value="{{this.id}}">{{this.name}}</option>
-        {{/each}}
-      </select>
-    </div>
-    <div class="form-field no-label">
-      <input type="submit" value="Add Player">
-    </div>
-  </form>
-</section>
-{{#if currentPlayers}}
-<div class="table-wrap">
-  <table>
-    <h1>Players</h1>
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Name</th>
-        <th>Color</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      {{#each currentPlayers}}
-        <tr>
-          <td>{{this.id}}</td>
-          <td>{{this.name}}</td>
-          <td><span class="player-color" style="background-color: #{{this.color}}"></span>#{{this.color}}</td>
-          <td class="align-right">
-            <form method="post" action="/leagues/{{../league.id}}/players/{{this.id}}/delete" class="table-form">
-              <input type="submit" value="Remove">
-            </form>
-          </td>
-        </tr>
-      {{/each}}
-    </tbody>
-  </table>
-</div>
-{{/if}}
-<section>
   <h1>Reset League</h1>
   <p>Warning - this will remove all played games and reset all players Elo rankings. <strong>There is no undo.</strong></p>
   <br>

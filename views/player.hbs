@@ -2,9 +2,9 @@
 <section>
   <div class="heading-cols margin-btm-20">
     <h1 class="heading-left">Update Player Details</h1>
-    <a href="/players" class="button heading-right">Back</a>
+    <a href="/{{currentLeague.short_name}}/players" class="button heading-right">Back</a>
   </div>
-  <form method="post" action="/players/{{player.id}}">
+  <form method="post" action="/{{currentLeague.short_name}}/players/{{player.id}}">
     <div class="form-field">
       <label for="nameField">Name</label>
       <input type="text" name="name" id="nameField" value="{{player.name}}">
