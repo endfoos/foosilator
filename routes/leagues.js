@@ -3,20 +3,25 @@ const bcrypt = require('bcryptjs')
 module.exports = function (app, db) {
   // View list of all leagues
   app.get('/leagues', (req, res) => {
+    const userId = req.user.id
     db.task((task) => {
       return task.batch([
         task.manyOrNone(`
-          SELECT id, name, short_name, max_score, created_at
-          FROM league
-          WHERE is_active=true
-          ORDER BY created_at DESC
-        `),
+            SELECT id, name, short_name, max_score, created_at
+            FROM league
+            WHERE is_active=true AND owner_id=$1
+            ORDER BY created_at DESC
+          `,
+          [userId]
+        ),
         task.manyOrNone(`
-          SELECT id, name, short_name, max_score, created_at
-          FROM league
-          WHERE is_active=false
-          ORDER BY created_at DESC
-        `)
+            SELECT id, name, short_name, max_score, created_at
+            FROM league
+            WHERE is_active=false AND owner_id=$1
+            ORDER BY created_at DESC
+          `,
+          [userId]
+        )
       ])
     })
     .then((data) => {
@@ -37,21 +42,24 @@ module.exports = function (app, db) {
   // Create a new league
   app.post('/leagues', (req, res) => {
     const { name, shortName, maxScore, leaguePassword } = req.body
+    const userId = req.user.id
     new Promise((resolve, reject) => {
       if (leaguePassword) {
         bcrypt.hash(leaguePassword, parseInt(process.env.BCRYPT_SALT_ROUNDS, 10))
         .then((leaguePasswordHash) => {
-          return db.none(
-            'INSERT INTO league(name, short_name, max_score, password) VALUES($1, $2, $3, $4)',
-            [name, shortName, maxScore, leaguePasswordHash]
+          return db.none(`
+              INSERT INTO league(name, short_name, max_score, password, owner_id)
+              VALUES($1, $2, $3, $4, $5)
+            `,
+            [name, shortName, maxScore, leaguePasswordHash, userId]
           )
         })
         .then(resolve)
         .catch(reject)
       } else {
         db.none(
-          'INSERT INTO league(name, short_name, max_score) VALUES($1, $2, $3)',
-          [name, shortName, maxScore]
+          'INSERT INTO league(name, short_name, max_score, owner_id) VALUES($1, $2, $3, $4)',
+          [name, shortName, maxScore, userId]
         )
         .then(resolve)
         .catch(reject)

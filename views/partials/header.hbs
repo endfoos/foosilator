@@ -44,12 +44,22 @@
       {{/if}}
       <nav class="main-nav">
         <ul class="main-nav-menu">
+          {{#if user}}
+            {{user.name}}
+          {{else}}
+            <a href="/auth/login">Login</a>
+          {{/if}}
           {{#if currentLeague}}
             <li><a {{#ifEq currentPage 'games'}}class="active"{{/ifEq}} href="/{{currentLeague.short_name}}/games">Games played</a></li>
             <li><a {{#ifEq currentPage 'rankings'}}class="active"{{/ifEq}} href="/{{currentLeague.short_name}}/rankings">Rankings</a></li>
-            <li><a {{#ifEq currentPage 'players'}}class="active"{{/ifEq}} href="/{{currentLeague.short_name}}/players">Manage players</a></li>
+            {{#if currentLeague.canManage}}
+              <li><a {{#ifEq currentPage 'players'}}class="active"{{/ifEq}} href="/{{currentLeague.short_name}}/players">Manage players</a></li>
+            {{/if}}
           {{/if}}
-          <li><a {{#ifEq currentPage 'leagues'}}class="active"{{/ifEq}} href="/leagues">Manage leagues</a></li>
+          {{#if user}}
+            <li><a {{#ifEq currentPage 'leagues'}}class="active"{{/ifEq}} href="/leagues">Manage leagues</a></li>
+            <li><a href="/auth/logout">Logout</a></li>
+          {{/if}}
         </ul>
       </nav>
     </div>
