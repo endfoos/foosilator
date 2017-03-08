@@ -521,7 +521,7 @@ module.exports = function (app, db) {
           res.redirect('/404')
         } else if (league.owner_id !== req.user.id) {
           req.session.attemptedUrl = req.originalUrl
-          res.redirect('/auth/login')
+          res.redirect('/404')
         } else {
           return next()
         }
@@ -546,7 +546,7 @@ module.exports = function (app, db) {
           res.redirect('/404')
         } else if (league.owner_id !== req.user.id) {
           req.session.attemptedUrl = req.originalUrl
-          res.redirect('/auth/login')
+          res.redirect('/404')
         } else {
           return next()
         }
