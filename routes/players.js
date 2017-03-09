@@ -12,11 +12,11 @@ module.exports = function (app, db) {
         }
         return task.batch([
           task.manyOrNone(
-            'SELECT * FROM league_player WHERE league_id=$1 AND is_active=true ORDER BY created_at DESC',
+            'SELECT * FROM league_player WHERE league_id=$1 AND is_active=true ORDER BY name ASC',
             [league.id]
           ),
           task.manyOrNone(
-            'SELECT * FROM league_player WHERE league_id=$1 AND is_active=false ORDER BY created_at DESC',
+            'SELECT * FROM league_player WHERE league_id=$1 AND is_active=false ORDER BY name ASC',
             [league.id]
           )
         ])
