@@ -21,7 +21,6 @@
     <table>
       <thead>
         <tr>
-          <th>ID</th>
           <th>Name</th>
           <th>Color</th>
           <th>Date Created</th>
@@ -31,7 +30,6 @@
       <tbody>
         {{#each players}}
           <tr>
-            <td>{{this.id}}</td>
             <td>{{this.name}}</td>
             <td><span class="player-color" style="background-color: #{{this.color}}"></span>#{{this.color}}</td>
             <td>{{formatDate this.created_at}}</td>
@@ -54,7 +52,6 @@
     <table>
       <thead>
         <tr>
-          <th>ID</th>
           <th>Name</th>
           <th>Color</th>
           <th>Date Created</th>
@@ -64,7 +61,6 @@
       <tbody>
         {{#each inactivePlayers}}
           <tr>
-            <td>{{this.id}}</td>
             <td>{{this.name}}</td>
             <td><span class="player-color" style="background-color: #{{this.color}}"></span>#{{this.color}}</td>
             <td>{{formatDate this.created_at}}</td>
