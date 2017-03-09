@@ -34,17 +34,12 @@ module.exports = function (app, db) {
         ])
       })
       .then((data) => {
-        // Redirect to manage players if no players in this league
-        if (data[1].length <= 0) {
-          res.redirect(`/leagues/${data[0].id}`)
-        } else {
-          res.render('games', {
-            league: data[0],
-            players: data[1],
-            latestGames: data[2],
-            currentPage: 'games'
-          })
-        }
+        res.render('games', {
+          league: data[0],
+          players: data[1],
+          latestGames: data[2],
+          currentPage: 'games'
+        })
       })
     })
     .catch((err) => {
