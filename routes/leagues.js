@@ -213,6 +213,24 @@ module.exports = function (app, db) {
     })
   })
 
+  app.post('/leagues/:id/owner', (req, res) => {
+    const newOwnerId = req.body.ownerId
+    db.none(`
+        UPDATE league SET owner_id=$1 WHERE id=$2
+      `,
+      [newOwnerId, req.params.id]
+    )
+    .then(() => {
+      res.redirect('/leagues')
+    })
+    .catch((err) => {
+      res.render('error', {
+        error: err
+      })
+      console.error(err)
+    })
+  })
+
   // Reset a league
   app.post('/leagues/:id/reset', (req, res) => {
     db.tx((transaction) => {

@@ -51,6 +51,20 @@
   </form>
 </section>
 <section>
+  <h1>Transfer League Ownership</h1>
+  <div class="form-field">
+    <label for="userSearchTypeahead">Select a user to transfer this league to:</label>
+    <input id="userSearchTypeahead" class="typeahead" type="text" placeholder="Name or Email">
+  </div>
+  <br>
+  <form id="transferOwnershipForm" method="post" action="/leagues/{{league.id}}/owner">
+    <input id="transferOwnershipOwnerId" type="hidden" name="ownerId">
+    <div class="form-field no-label">
+      <input id="transferOwnershipSubmit" type="submit" value="">
+    </div>
+  </form>
+</section>
+<section>
   <h1>Reset League</h1>
   <p>Warning - this will remove all played games and reset all players Elo rankings. <strong>There is no undo.</strong></p>
   <br>
@@ -64,4 +78,42 @@
     </div>
   </form>
 </section>
+<script src="/scripts/typeahead.bundle.0.11.1.min.js"></script>
+<script>
+var $ownershpForm = $('#transferOwnershipForm');
+$ownershpForm.hide();
+
+var userSource = new Bloodhound({
+  datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+  queryTokenizer: Bloodhound.tokenizers.whitespace,
+  identify: function (obj) { return obj.id },
+  remote: {
+    url: '/users/search?q=%QUERY',
+    wildcard: '%QUERY'
+  }
+});
+
+$userSearchField = $('#userSearchTypeahead');
+
+$userSearchField.typeahead(null, {
+  name: 'user-search',
+  display: 'name',
+    templates: {suggestion: function (obj) {
+      var sug = '<div><strong>' + obj.name + '</strong>';
+      if (obj.email) {
+        sug += ' (' + obj.email + ')';
+      }
+      sug += '</div>';
+      return sug;
+    }
+  },
+  source: userSource
+});
+
+$userSearchField.on('typeahead:select typeahead:autocomplete', function (e, obj) {
+  $('#transferOwnershipOwnerId').val(obj.id);
+  $('#transferOwnershipSubmit').val('Transfer To ' + obj.name);
+  $('#transferOwnershipForm').show();
+});
+</script>
 {{> footer}}

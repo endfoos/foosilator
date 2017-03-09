@@ -635,6 +635,14 @@ module.exports = function (app, db) {
     }
   }
 
+  const checkAuthenticatedApi = (req, res, next) => {
+    if (!req.user) {
+      res.status(401).end()
+    } else {
+      return next()
+    }
+  }
+
   // Public League access
   app.use('/:league_short_name/games', checkLeaguePassword)
   app.use('/:league_short_name/rankings', checkLeaguePassword)
@@ -653,4 +661,5 @@ module.exports = function (app, db) {
 
   // Is Authenticated
   app.get('/leagues', checkAuthenticated)
+  app.get('/users/search', checkAuthenticatedApi)
 }
