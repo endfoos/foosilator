@@ -52,6 +52,7 @@ require('./lib/migrate.js')(db)
   require('./routes/rankings.js')(app, db)
   require('./routes/players.js')(app, db)
   require('./routes/leagues.js')(app, db)
+  require('./routes/users.js')(app, db)
   require('./routes/404.js')(app, db)
 
   // Listen
