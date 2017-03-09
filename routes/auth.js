@@ -6,13 +6,13 @@ const PassportFacebookStrategy = require('passport-facebook').Strategy
 
 // Returns a safe subset of user fields for templates
 const userPublicFields = (userData) => {
-  return {
+  return userData ? {
     id: userData.id,
     name: userData.name,
     hasEmail: Boolean(userData.email && userData.password),
     hasFacebook: Boolean(userData.facebook_id),
     hasGoogle: Boolean(userData.google_id)
-  }
+  } : null
 }
 
 module.exports = function (app, db) {
@@ -25,7 +25,7 @@ module.exports = function (app, db) {
     (email, password, done) => {
       db.oneOrNone(`
         SELECT * FROM foosilator_user
-        WHERE email=$1
+        WHERE email=$1 AND password IS NOT NULL
         `,
         [email]
       )
@@ -52,23 +52,52 @@ module.exports = function (app, db) {
     {
       clientID: process.env.FACEBOOK_APP_ID,
       clientSecret: process.env.FACEBOOK_APP_SECRET,
-      callbackURL: process.env.FACEBOOK_CALLBACK_URL
+      callbackURL: process.env.FACEBOOK_CALLBACK_URL,
+      profileFields: ['id', 'displayName', 'email']
     },
     (accessToken, refreshToken, profile, done) => {
+      const email = profile.emails && profile.emails[0] && profile.emails[0].value;
       db.task((task) => {
         return task.oneOrNone(`
           SELECT * FROM foosilator_user
-          where facebook_id=$1
+          WHERE facebook_id=$1
           `,
           [profile.id]
         )
         .then((user) => {
+          if (!user && email) {
+            // Associate account with any matching email
+            return task.oneOrNone(`
+                SELECT * FROM foosilator_user
+                WHERE email=$1
+              `,
+              [email]
+            )
+            .then((user) => {
+              if (!user) {
+                return Promise.resolve();
+              } else {
+                return task.one(`
+                    UPDATE foosilator_user
+                    SET facebook_id=$1
+                    WHERE id=$2
+                    RETURNING *
+                  `,
+                  [profile.id, user.id]
+                )
+              }
+            })
+          } else {
+            return Promise.resolve(user);
+          }
+        })
+        .then((user) => {
           // Create new user
           if (!user) {
             return task.one(`
-              INSERT INTO foosilator_user(name, facebook_id) VALUES($1, $2) RETURNING *
+              INSERT INTO foosilator_user(name, email, facebook_id) VALUES($1, $2, $3) RETURNING *
               `,
-              [profile.displayName, profile.id]
+              [profile.displayName, email, profile.id]
             )
           } else {
             return Promise.resolve(user)
@@ -90,6 +119,7 @@ module.exports = function (app, db) {
       callbackURL: process.env.GOOGLE_CALLBACK_URL
     },
     (accessToken, refreshToken, profile, done) => {
+      const email = profile.emails && profile.emails[0] && profile.emails[0].value;
       db.task((task) => {
         return task.oneOrNone(`
           SELECT * FROM foosilator_user
@@ -98,12 +128,39 @@ module.exports = function (app, db) {
           [profile.id]
         )
         .then((user) => {
+          if (!user && email) {
+            // Associate account with any matching email
+            return task.oneOrNone(`
+                SELECT * FROM foosilator_user
+                WHERE email=$1
+              `,
+              [email]
+            )
+            .then((user) => {
+              if (!user) {
+                return Promise.resolve();
+              } else {
+                return task.one(`
+                    UPDATE foosilator_user
+                    SET google_id=$1
+                    WHERE id=$2
+                    RETURNING *
+                  `,
+                  [profile.id, user.id]
+                )
+              }
+            })
+          } else {
+            return Promise.resolve(user)
+          }
+        })
+        .then((user) => {
           // Create new user
           if (!user) {
             return task.one(`
-              INSERT INTO foosilator_user(name, google_id) VALUES($1, $2) RETURNING *
+              INSERT INTO foosilator_user(name, email, google_id) VALUES($1, $2, $3) RETURNING *
               `,
-              [profile.displayName, profile.id]
+              [profile.displayName, email, profile.id]
             )
           } else {
             return Promise.resolve(user)
@@ -219,7 +276,7 @@ module.exports = function (app, db) {
     passport.authenticate(
       'google',
       {
-        scope: ['https://www.googleapis.com/auth/plus.login'],
+        scope: ['profile email'],
         prompt: 'select_account'
       }
     )
@@ -246,7 +303,12 @@ module.exports = function (app, db) {
   // Login with Facebook
   app.get(
     '/auth/facebook',
-    passport.authenticate('facebook')
+    passport.authenticate(
+      'facebook',
+      {
+        scope: ['email']
+      }
+    )
   )
 
   // Facebook OAuth2 Callback
@@ -301,9 +363,13 @@ module.exports = function (app, db) {
       db.oneOrNone('SELECT * FROM foosilator_user WHERE email=$1', [email])
       .then((user) => {
         if (user) {
+          let emailErrorText = 'This email address has already been registered.'
+          if (!user.password && (user.google_id || user.facebook_id)) {
+            emailErrorText = 'This email address has already been registered with an existing Google or Facebook account.'
+          }
           res.render('auth/login', {
             registerErrors: {
-              email: 'This email address has already been registered.'
+              email: emailErrorText
             },
             registerValues: {
               email: email,
@@ -521,7 +587,7 @@ module.exports = function (app, db) {
           res.redirect('/404')
         } else if (league.owner_id !== req.user.id) {
           req.session.attemptedUrl = req.originalUrl
-          res.redirect('/auth/login')
+          res.redirect('/404')
         } else {
           return next()
         }
@@ -546,7 +612,7 @@ module.exports = function (app, db) {
           res.redirect('/404')
         } else if (league.owner_id !== req.user.id) {
           req.session.attemptedUrl = req.originalUrl
-          res.redirect('/auth/login')
+          res.redirect('/404')
         } else {
           return next()
         }
