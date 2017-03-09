@@ -56,7 +56,7 @@ module.exports = function (app, db) {
       profileFields: ['id', 'displayName', 'email']
     },
     (accessToken, refreshToken, profile, done) => {
-      const email = profile.emails && profile.emails[0] && profile.emails[0].value;
+      const email = profile.emails && profile.emails[0] && profile.emails[0].value
       db.task((task) => {
         return task.oneOrNone(`
           SELECT * FROM foosilator_user
@@ -75,7 +75,7 @@ module.exports = function (app, db) {
             )
             .then((user) => {
               if (!user) {
-                return Promise.resolve();
+                return Promise.resolve()
               } else {
                 return task.one(`
                     UPDATE foosilator_user
@@ -88,7 +88,7 @@ module.exports = function (app, db) {
               }
             })
           } else {
-            return Promise.resolve(user);
+            return Promise.resolve(user)
           }
         })
         .then((user) => {
@@ -119,7 +119,7 @@ module.exports = function (app, db) {
       callbackURL: process.env.GOOGLE_CALLBACK_URL
     },
     (accessToken, refreshToken, profile, done) => {
-      const email = profile.emails && profile.emails[0] && profile.emails[0].value;
+      const email = profile.emails && profile.emails[0] && profile.emails[0].value
       db.task((task) => {
         return task.oneOrNone(`
           SELECT * FROM foosilator_user
@@ -138,7 +138,7 @@ module.exports = function (app, db) {
             )
             .then((user) => {
               if (!user) {
-                return Promise.resolve();
+                return Promise.resolve()
               } else {
                 return task.one(`
                     UPDATE foosilator_user
