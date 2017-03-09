@@ -1,6 +1,11 @@
 module.exports = function (app, db) {
   // Rankings Landing Page
   app.get('/:league_short_name/rankings', (req, res) => {
+    let dayLimit = req.query.dayLimit ? parseInt(req.query.dayLimit, 10) : 14
+    dayLimit = dayLimit < 366 && dayLimit > 0 ? dayLimit : 14
+    // Multiple game limit by 2 to account for games being returned twice (once for each player)
+    let gameLimit = req.query.gameLimit ? 2 * parseInt(req.query.gameLimit, 10) : 0
+    gameLimit = gameLimit < 10000 && gameLimit >= 0 ? gameLimit : 0
     db.task((task) => {
       return task.oneOrNone(
         'SELECT id, name from league WHERE short_name=$1',
@@ -41,30 +46,35 @@ module.exports = function (app, db) {
               FROM game
               WHERE (game.winner_id=league_player.id OR game.loser_id=league_player.id)
                 AND game.league_id=$1
-                AND created_at > CURRENT_DATE - INTERVAL '14 days'
+                AND created_at > CURRENT_DATE - ($2 * INTERVAL '1 days')
               ORDER BY game.created_at DESC
             ) elo_change ON true
             WHERE league_player.is_active=true
-          `, [league.id])
+            ORDER BY created_at DESC
+            LIMIT ${gameLimit ? '$3' : 'ALL'}
+          `, [league.id, dayLimit, gameLimit])
         ])
       })
       .then((data) => {
         const league = data[0]
         const players = data[1]
-        const lastTengames = data[2]
+        const recentGames = data[2]
 
         const gamesByPlayerId = {}
-        lastTengames.forEach((game) => {
+        const startDate = new Date()
+        let endDate = new Date(startDate.getTime())
+        recentGames.forEach((game) => {
           gamesByPlayerId[game.player_id] = gamesByPlayerId[game.player_id] || []
           gamesByPlayerId[game.player_id].push({
             created_at: game.created_at,
             elo_change: game.elo_change
           })
+          if (game.created_at.getTime() < endDate.getTime()) {
+            endDate = game.created_at
+          }
         })
 
-        const startDate = new Date()
-        const endDate = new Date(startDate.getTime())
-        endDate.setDate(endDate.getDate() - 14)
+        endDate.setHours(endDate.getHours() - 1)
 
         // Map of player_id -> [{player_name, elo_rating, date}]
         const playerEloSeries = {}
@@ -131,7 +141,10 @@ module.exports = function (app, db) {
           players: players,
           playerEloSeries: JSON.stringify(playerEloSeries),
           gaugeData: JSON.stringify(gaugeData),
-          currentPage: 'rankings'
+          currentPage: 'rankings',
+          // Divide gameLimit by 2 again
+          gameLimit: gameLimit / 2,
+          dayLimit: dayLimit
         })
       })
     })
