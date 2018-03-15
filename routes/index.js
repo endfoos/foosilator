@@ -22,4 +22,8 @@ module.exports = function (app, db) {
       })
     }
   })
+
+  app.get('/health', (req, res) => {
+    res.send('OK')
+  })
 }
