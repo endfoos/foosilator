@@ -43,6 +43,10 @@ If there is conflict in ids between developers then switch from manual ids to un
 
 `docker run -d --env-file .env -p 8080:8080 foosilator`
 
+### Compose
+
+`docker compose up -d`
+
 ## Author
 
 Lewis Christie

@@ -1,4 +1,4 @@
-FROM nodesource/trusty:6
+FROM node:6
 
 RUN npm install -g forever
 
