@@ -1,15 +1,31 @@
-version: '2'
+version: '3'
+
 services:
-  app:
+  foosilator:
     build: .
     image: endfoos/foosilator
     ports:
       - 8080:8080
     env_file: .env
+    environment:
+      - PORT=8080
+      - PGHOST=db
+      - PGPORT=5432
+      - PGDATABASE=foosilator
+      - PGUSER=foosilator
+      - PGPASSWORD=foosilator
     depends_on:
-      - database
-  database:
+      - db
+  db:
     image: postgres:9.5
-    env_file: .env-database
+    environment:
+      - POSTGRES_DB=foosilator
+      - POSTGRES_USER=foosilator
+      - POSTGRES_PASSWORD=foosilator
     ports:
       - 6543:5432
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:

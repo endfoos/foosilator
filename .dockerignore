@@ -1,6 +1,7 @@
 node_modules
 .deploy
 .git
+.gitignore
 .env*
 deploy
 docker-compose.yml
